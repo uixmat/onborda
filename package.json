@@ -17,23 +17,20 @@
     "wizard",
     "react"
   ],
-  "engines": {
-    "node": ">=10"
-  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
     "start": "npm run build && node dist/index.js",
-    "tsc": "tsc --outDir dist"
   },
   "peerDependencies": {
     "framer-motion": ">=11.0.8",
-    "next": ">=14.0.0"
+    "react-dom": ">=18.2.0",
+    "react": ">=18.2.0",
+    "next": ">=13.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.63",
-    "typescript": "^5.3.3",
-    "react": ">=18.2.0"
+    "typescript": "^5.3.3"
   }
 }
