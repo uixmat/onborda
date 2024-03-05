@@ -19,7 +19,7 @@ Target anything in your app using the elements `id` attribute.
 ## Setup
 Tailwind CSS will need to scan the node module in order to include the classes used. See [configuring source paths](https://tailwindcss.com/docs/content-configuration#configuring-source-paths) for more information about this topic.
 
-```json
+```ts
 const config: Config = {
   content: [
     './node_modules/onborda/dist/**/*.{js,ts,jsx,tsx}' // Add this
