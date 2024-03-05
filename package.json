@@ -21,7 +21,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "start": "npm run build && node dist/index.js",
+    "start": "npm run build && node dist/index.js"
   },
   "peerDependencies": {
     "framer-motion": ">=11.0.8",
