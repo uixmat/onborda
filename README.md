@@ -3,7 +3,7 @@ Onborda is a lightweight onboarding flow that utilises [framer-motion](https://w
 
 ## Demo
 
-- [onborda.vercel.app](onborda.vercel.app)
+- [onborda.vercel.app](https://onborda.vercel.app)
 
 ### Install
 ```bash
