@@ -290,11 +290,11 @@ const Onborda: React.FC<OnbordaProps> = ({
                 style={getArrowStyle(steps[currentStep]?.side as any)}
               />
               {/* Card Header */}
-              <div className="flex items-center justify-between gap-5 mb-4">
+              <div className="flex items-center justify-between gap-5 mb-3">
                 <h2 className="text-xl font-bold">
                   {steps[currentStep]?.icon} {steps[currentStep]?.title}
                 </h2>
-                <div className="text-slate-200 text-base font-semibold">
+                <div className="text-slate-300 text-base font-semibold">
                   {currentStep + 1} of {steps.length}
                 </div>
               </div>
@@ -323,14 +323,14 @@ const Onborda: React.FC<OnbordaProps> = ({
                   <button
                     data-control="prev"
                     onClick={prevStep}
-                    className="border rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
+                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700"
                   >
                     Prev
                   </button>
                   <button
                     data-control="next"
                     onClick={nextStep}
-                    className="border rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300 ml-auto"
+                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 ml-auto"
                   >
                     Next
                   </button>
