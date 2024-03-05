@@ -279,7 +279,7 @@ const Onborda: React.FC<OnbordaProps> = ({
           >
             {/* Card */}
             <div
-              className="absolute flex flex-col w-[400px] p-8 text-black transition-all bg-white shadow-lg rounded-20 min-w-min pointer-events-auto"
+              className="absolute flex flex-col w-[400px] p-8 text-black transition-all bg-white shadow-lg rounded-lg min-w-min pointer-events-auto"
               data-name="onborda-card"
               style={getCardStyle(steps[currentStep]?.side as any)}
             >
@@ -291,10 +291,10 @@ const Onborda: React.FC<OnbordaProps> = ({
               />
               {/* Card Header */}
               <div className="flex items-center justify-between gap-5 mb-4">
-                <h2 className="text-xl leading-[25px] font-bold">
+                <h2 className="text-xl font-bold">
                   {steps[currentStep]?.icon} {steps[currentStep]?.title}
                 </h2>
-                <div className="text-utility140 text-[15px] font-semibold">
+                <div className="text-slate-200 text-base font-semibold">
                   {currentStep + 1} of {steps.length}
                 </div>
               </div>
@@ -308,7 +308,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                     key={index}
                     data-name="onborda-step"
                     className={`self-stretch w-full h-1 rounded-xl ${
-                      index === currentStep ? "bg-primary1" : "bg-utility140"
+                      index === currentStep ? "bg-indigo-600" : "bg-indigo-100"
                     }`}
                   />
                 ))}
@@ -320,10 +320,18 @@ const Onborda: React.FC<OnbordaProps> = ({
               {/* Stepper Controls */}
               {steps[currentStep]?.showControls && (
                 <div className="flex items-center w-full gap-4">
-                  <button data-control="prev" onClick={prevStep}>
+                  <button
+                    data-control="prev"
+                    onClick={prevStep}
+                    className="border rounded-sm px-2 inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
+                  >
                     prev
                   </button>
-                  <button data-control="next" onClick={nextStep}>
+                  <button
+                    data-control="next"
+                    onClick={nextStep}
+                    className="border rounded-sm px-2 inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
+                  >
                     next
                   </button>
                 </div>

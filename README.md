@@ -41,7 +41,8 @@ const config: Config = {
 | `showControls`  | `boolean`                  | Optional. If `true`, shows navigation controls on the step.                           |
 | `pointerPadding`| `number`                   | Optional. Padding around the highlighted area in pixels.                              |
 | `pointerRadius` | `number`                   | Optional. The border-radius of the highlighted area.                                  |
-| `onClick`       | `() => void`               | Optional. A callback function that gets called when the step is clicked.              |
+| `nextRoute`     | `string`                   | Optional. Uses `useRouter` from next/navigation to push route changes                 |
+| `prevRoute`     | `string`                   | Optional. Uses `useRouter` from next/navigation to push route changes                 |
 
 ### Onborda Props
 
