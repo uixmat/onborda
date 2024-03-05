@@ -16,6 +16,9 @@ interface Step {
   pointerRadius?: number;
   // Callbacks
   onClick?: () => void;
+  // Routing
+  nextRoute?: () => void;
+  prevRoute?: () => void;
 }
 
 interface OnbordaProps {
@@ -110,12 +113,20 @@ const Onborda: React.FC<OnbordaProps> = ({
   // Step Controls
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
+      const nextRouteCallback = steps[currentStep].nextRoute;
+      if (nextRouteCallback && typeof nextRouteCallback === "function") {
+        nextRouteCallback();
+      }
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
+      const prevRouteCallback = steps[currentStep].nextRoute;
+      if (prevRouteCallback && typeof prevRouteCallback === "function") {
+        prevRouteCallback();
+      }
       setCurrentStep(currentStep - 1);
     }
   };
