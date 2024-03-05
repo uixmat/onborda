@@ -9,6 +9,8 @@ interface Step {
     pointerPadding?: number;
     pointerRadius?: number;
     onClick?: () => void;
+    nextRoute?: () => void;
+    prevRoute?: () => void;
 }
 interface OnbordaProps {
     children: React.ReactNode;
