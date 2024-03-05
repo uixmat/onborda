@@ -1,0 +1,34 @@
+{
+  "name": "onborda",
+  "version": "1.0.0",
+  "description": "An onboarding wizard for React",
+  "license": "MIT",
+  "author": "Matt Litherland",
+  "homepage": "https://github.com/uixmat/onborda#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uixmat/onborda.git"
+  },
+  "keywords": [
+    "react-onboarding",
+    "react-onborda",
+    "onboarding",
+    "onborda",
+    "wizard",
+    "react"
+  ],
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "tsc": "tsc --outDir dist"
+  },
+  "devDependencies": {
+    "framer-motion": "^11.0.8",
+    "react": "^18.2.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}
