@@ -319,20 +319,20 @@ const Onborda: React.FC<OnbordaProps> = ({
 
               {/* Stepper Controls */}
               {steps[currentStep]?.showControls && (
-                <div className="flex items-center w-full gap-4">
+                <div className="flex items-center w-full gap-4 mt-4">
                   <button
                     data-control="prev"
                     onClick={prevStep}
-                    className="border rounded-sm px-2 inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
+                    className="border rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
                   >
-                    prev
+                    Prev
                   </button>
                   <button
                     data-control="next"
                     onClick={nextStep}
-                    className="border rounded-sm px-2 inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300"
+                    className="border rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 border-bg-indigo-300 ml-auto"
                   >
-                    next
+                    Next
                   </button>
                 </div>
               )}
