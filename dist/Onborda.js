@@ -3,11 +3,15 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 const Onborda = ({ children, steps, showOnborda = false, // Default to false
 shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
     const { currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
+    // - -
+    // Route Changes
+    const router = useRouter();
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {
@@ -68,22 +72,38 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
     }, [currentStep, steps]);
     // - -
     // Step Controls
-    const nextStep = () => {
+    const nextStep = async () => {
         if (currentStep < steps.length - 1) {
-            const nextRouteCallback = steps[currentStep].nextRoute;
-            if (nextRouteCallback && typeof nextRouteCallback === "function") {
-                nextRouteCallback();
+            try {
+                const route = steps[currentStep].nextRoute;
+                if (route) {
+                    await router.push(route);
+                    setCurrentStep(currentStep + 1);
+                }
+                else {
+                    setCurrentStep(currentStep + 1);
+                }
             }
-            setCurrentStep(currentStep + 1);
+            catch (error) {
+                console.error("Error navigating to next route", error);
+            }
         }
     };
-    const prevStep = () => {
+    const prevStep = async () => {
         if (currentStep > 0) {
-            const prevRouteCallback = steps[currentStep].nextRoute;
-            if (prevRouteCallback && typeof prevRouteCallback === "function") {
-                prevRouteCallback();
+            try {
+                const route = steps[currentStep - 1]?.prevRoute;
+                if (route) {
+                    await router.push(route);
+                    setCurrentStep(currentStep - 1);
+                }
+                else {
+                    setCurrentStep(currentStep - 1);
+                }
             }
-            setCurrentStep(currentStep - 1);
+            catch (error) {
+                console.error("Error navigating to previous route", error);
+            }
         }
     };
     // - -

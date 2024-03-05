@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface Step {
   // Step Content
@@ -17,8 +18,8 @@ interface Step {
   // Callbacks
   onClick?: () => void;
   // Routing
-  nextRoute?: () => void;
-  prevRoute?: () => void;
+  nextRoute?: string;
+  prevRoute?: string;
 }
 
 interface OnbordaProps {
@@ -44,6 +45,10 @@ const Onborda: React.FC<OnbordaProps> = ({
     height: number;
   } | null>(null);
   const currentElementRef = useRef<Element | null>(null);
+
+  // - -
+  // Route Changes
+  const router = useRouter();
 
   // - -
   // Helper function to get element position
@@ -111,23 +116,35 @@ const Onborda: React.FC<OnbordaProps> = ({
 
   // - -
   // Step Controls
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < steps.length - 1) {
-      const nextRouteCallback = steps[currentStep].nextRoute;
-      if (nextRouteCallback && typeof nextRouteCallback === "function") {
-        nextRouteCallback();
+      try {
+        const route = steps[currentStep].nextRoute;
+        if (route) {
+          await router.push(route);
+          setCurrentStep(currentStep + 1);
+        } else {
+          setCurrentStep(currentStep + 1);
+        }
+      } catch (error) {
+        console.error("Error navigating to next route", error);
       }
-      setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
+  const prevStep = async () => {
     if (currentStep > 0) {
-      const prevRouteCallback = steps[currentStep].nextRoute;
-      if (prevRouteCallback && typeof prevRouteCallback === "function") {
-        prevRouteCallback();
+      try {
+        const route = steps[currentStep - 1]?.prevRoute;
+        if (route) {
+          await router.push(route);
+          setCurrentStep(currentStep - 1);
+        } else {
+          setCurrentStep(currentStep - 1);
+        }
+      } catch (error) {
+        console.error("Error navigating to previous route", error);
       }
-      setCurrentStep(currentStep - 1);
     }
   };
 

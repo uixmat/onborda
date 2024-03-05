@@ -1,6 +1,6 @@
 {
   "name": "onborda",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "An onboarding wizard for Next.js",
   "license": "MIT",
   "author": "Matt Litherland",
@@ -26,7 +26,8 @@
   "peerDependencies": {
     "framer-motion": ">=11",
     "react-dom": ">=18",
-    "react": ">=18"
+    "react": ">=18",
+    "next": ">=13"
   },
   "devDependencies": {
     "@types/react": "^18.2.63",
