@@ -24,23 +24,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useOnborda = exports.OnbordaProvider = void 0;
-var react_1 = __importStar(require("react"));
-var OnbordaContext = (0, react_1.createContext)(undefined);
-var useOnborda = function () {
-    var context = (0, react_1.useContext)(OnbordaContext);
+const react_1 = __importStar(require("react"));
+const OnbordaContext = (0, react_1.createContext)(undefined);
+const useOnborda = () => {
+    const context = (0, react_1.useContext)(OnbordaContext);
     if (context === undefined) {
         throw new Error("useOnborda must be used within an OnbordaProvider");
     }
     return context;
 };
 exports.useOnborda = useOnborda;
-var OnbordaProvider = function (_a) {
-    var children = _a.children;
-    var _b = (0, react_1.useState)(0), currentStep = _b[0], setCurrentStepState = _b[1];
-    var _c = (0, react_1.useState)(true), isOnbordaVisible = _c[0], setOnbordaVisible = _c[1];
-    var setCurrentStep = (0, react_1.useCallback)(function (step, delay) {
+const OnbordaProvider = ({ children, }) => {
+    const [currentStep, setCurrentStepState] = (0, react_1.useState)(0);
+    const [isOnbordaVisible, setOnbordaVisible] = (0, react_1.useState)(true);
+    const setCurrentStep = (0, react_1.useCallback)((step, delay) => {
         if (delay) {
-            setTimeout(function () {
+            setTimeout(() => {
                 setCurrentStepState(step);
                 setOnbordaVisible(true);
             }, delay);
@@ -50,9 +49,11 @@ var OnbordaProvider = function (_a) {
             setOnbordaVisible(true);
         }
     }, []);
-    var closeOnborda = (0, react_1.useCallback)(function () {
+    const closeOnborda = (0, react_1.useCallback)(() => {
         setOnbordaVisible(false);
     }, []);
-    return (react_1.default.createElement(OnbordaContext.Provider, { value: { currentStep: currentStep, setCurrentStep: setCurrentStep, closeOnborda: closeOnborda, isOnbordaVisible: isOnbordaVisible } }, children));
+    return (<OnbordaContext.Provider value={{ currentStep, setCurrentStep, closeOnborda, isOnbordaVisible }}>
+      {children}
+    </OnbordaContext.Provider>);
 };
 exports.OnbordaProvider = OnbordaProvider;
