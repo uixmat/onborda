@@ -1,6 +1,20 @@
 # Onborda
 Onborda is a lightweight onboarding flow that utilises [framer-motion](https://www.framer.com/motion/) for animations and [tailwindcss](https://tailwindcss.com/) for styling.
 
+## Demo
+
+- [onborda.vercel.app](onborda.vercel.app)
+
+### Install
+```bash
+# npm
+npm i onborda
+# pnpm
+pnpm add onborda
+# yarn
+yarn add onborda
+```
+
 ### `layout.tsx`
 ```tsx
 <OnbordaProvider>
