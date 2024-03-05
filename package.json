@@ -1,6 +1,6 @@
 {
   "name": "onborda",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "An onboarding wizard for React",
   "license": "MIT",
   "author": "Matt Litherland",
@@ -24,15 +24,13 @@
     "start": "npm run build && node dist/index.js",
     "tsc": "tsc --outDir dist"
   },
-  "devDependencies": {
-    "framer-motion": "^11.0.8",
-    "typescript": "^5.3.3"
-  },
   "peerDependencies": {
+    "framer-motion": "^11.0.8",
     "next": "^14.0.0"
   },
-  "dependencies": {
+  "devDependencies": {
     "@types/react": "^18.2.63",
+    "typescript": "^5.3.3",
     "react": "^18.2.0"
   }
 }
