@@ -2,9 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "module": "CommonJS",
-    "target": "es5",
-    "lib": ["dom", "es6"],
-    "jsx": "react",
+    "target": "es2016",
     "declaration": true,
     "strict": false,
     "esModuleInterop": true,
