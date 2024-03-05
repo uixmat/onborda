@@ -28,7 +28,7 @@ const config: Config = {
 
 ## Options
 
-### `Step` Interface
+### Steps
 
 | Property        | Type                       | Description                                                                           |
 |-----------------|----------------------------|---------------------------------------------------------------------------------------|
@@ -42,7 +42,7 @@ const config: Config = {
 | `pointerRadius` | `number`                   | Optional. The border-radius of the highlighted area.                                  |
 | `onClick`       | `() => void`               | Optional. A callback function that gets called when the step is clicked.              |
 
-### `OnbordaProps` Interface
+### Onborda Props
 
 | Property        | Type                       | Description                                                                           |
 |-----------------|----------------------------|---------------------------------------------------------------------------------------|
