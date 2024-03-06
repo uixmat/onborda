@@ -1,6 +1,9 @@
 "use client";
 import React, { createContext, useContext, useState, useCallback } from "react";
 
+// Types
+import { OnbordaContextType } from "./types";
+
 // Example Hooks Usage:
 // const { setCurrentStep, closeOnborda } = useOnborda();
 
@@ -9,13 +12,6 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 
 // // To close the onboarding
 // closeOnborda(); // Closes the onboarding overlay
-
-interface OnbordaContextType {
-  currentStep: number;
-  setCurrentStep: (step: number, delay?: number) => void;
-  closeOnborda: () => void;
-  isOnbordaVisible: boolean;
-}
 
 const OnbordaContext = createContext<OnbordaContextType | undefined>(undefined);
 

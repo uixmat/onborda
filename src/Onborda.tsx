@@ -4,31 +4,8 @@ import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-interface Step {
-  // Step Content
-  icon: React.ReactNode | string | null;
-  title: string;
-  content: React.ReactNode;
-  selector: string;
-  // Options
-  side?: "top" | "bottom" | "left" | "right";
-  showControls?: boolean;
-  pointerPadding?: number;
-  pointerRadius?: number;
-  // Callbacks
-  onClick?: () => void;
-  // Routing
-  nextRoute?: string;
-  prevRoute?: string;
-}
-
-interface OnbordaProps {
-  children: React.ReactNode;
-  steps: Step[];
-  showOnborda?: boolean;
-  shadowRgb?: string;
-  shadowOpacity?: string;
-}
+// Types
+import { Step, OnbordaProps } from "./types";
 
 const Onborda: React.FC<OnbordaProps> = ({
   children,
@@ -330,7 +307,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                   <button
                     data-control="next"
                     onClick={nextStep}
-                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 ml-auto"
+                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-red-700 ml-auto"
                   >
                     Next
                   </button>
