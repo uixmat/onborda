@@ -3,15 +3,22 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 const Onborda = ({ children, steps, showOnborda = false, // Default to false
-shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
+shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) => {
     const { currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
+    const params = useParams();
     // - -
     // Route Changes
     const router = useRouter();
+    const pathname = usePathname();
+    useEffect(() => {
+        if (params.step) {
+            setCurrentStep(parseInt(params.step));
+        }
+    }, [params.step]);
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {
@@ -92,17 +99,18 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
     const prevStep = async () => {
         if (currentStep > 0) {
             try {
-                const route = steps[currentStep - 1]?.prevRoute;
+                const route = steps[currentStep].prevRoute;
                 if (route) {
-                    await router.push(route);
+                    await router.push(route + "?step=" + (currentStep - 1));
                     setCurrentStep(currentStep - 1);
                 }
                 else {
                     setCurrentStep(currentStep - 1);
+                    router.push(pathname);
                 }
             }
             catch (error) {
-                console.error("Error navigating to previous route", error);
+                console.error("Error navigating to next route", error);
             }
         }
     };
@@ -148,31 +156,36 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
         switch (side) {
             case "bottom":
                 return {
-                    transform: `translate(-50%, 0) rotate(45deg)`,
+                    transform: `translate(-50%, 0) rotate(270deg)`,
                     left: "50%",
-                    top: "-10px",
+                    top: "-23px",
                 };
             case "top":
                 return {
-                    transform: `translate(-50%, 0) rotate(45deg)`,
+                    transform: `translate(-50%, 0) rotate(90deg)`,
                     left: "50%",
-                    bottom: "-10px",
+                    bottom: "-23px",
                 };
             case "right":
                 return {
-                    transform: `translate(0, -50%) rotate(45deg)`,
+                    transform: `translate(0, -50%) rotate(180deg)`,
                     top: "50%",
-                    left: "-10px",
+                    left: "-23px",
                 };
             case "left":
                 return {
-                    transform: `translate(0, -50%) rotate(45deg)`,
+                    transform: `translate(0, -50%) rotate(0deg)`,
                     top: "50%",
-                    right: "-10px",
+                    right: "-23px",
                 };
             default:
                 return {}; // Default case if no side is specified
         }
+    };
+    // - -
+    // Card Arrow
+    const CardArrow = () => {
+        return (_jsx("svg", { viewBox: "0 0 54 54", "data-name": "onborda-arrow", className: "absolute w-6 h-6 origin-center", style: getArrowStyle(steps[currentStep]?.side), children: _jsx("path", { id: "triangle", d: "M27 27L0 0V54L27 27Z", fill: "currentColor" }) }));
     };
     // - -
     // Overlay Variants
@@ -185,6 +198,14 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
     const pointerPadding = steps[currentStep]?.pointerPadding ?? 30;
     const pointerPadOffset = pointerPadding / 2;
     const pointerRadius = steps[currentStep]?.pointerRadius ?? 28;
+    // - -
+    // Default Card
+    const DefaultCard = ({ currentStep, nextStep, prevStep, arrow, }) => {
+        return (_jsxs("div", { className: "flex flex-col w-full bg-white p-4 rounded-md text-black", children: [_jsxs("div", { className: "flex items-center justify-between gap-5 mb-3", children: [_jsxs("h2", { className: "text-xl font-bold", children: [steps[currentStep]?.icon, " ", steps[currentStep]?.title] }), _jsxs("div", { className: "text-slate-300 text-base font-semibold", children: [currentStep + 1, " of ", steps.length] })] }), _jsx("div", { "data-name": "onborda-stepper", className: "flex w-full gap-1 mb-8", children: steps.map((_, index) => (_jsx("span", { "data-name": "onborda-step", className: `self-stretch w-full h-1 rounded-xl ${index === currentStep ? "bg-indigo-600" : "bg-indigo-100"}` }, index))) }), _jsx("div", { className: "text-[15px]", children: steps[currentStep]?.content }), steps[currentStep]?.showControls && (_jsxs("div", { className: "flex items-center w-full gap-4 mt-4", children: [_jsx("button", { "data-control": "prev", onClick: prevStep, className: "rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700", children: "Prev" }), _jsx("button", { "data-control": "next", onClick: nextStep, className: "rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 ml-auto", children: "Next" })] })), _jsx("span", { className: "text-white", children: arrow })] }));
+    };
+    const CardToRender = CardComponent
+        ? () => (_jsx(CardComponent, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }))
+        : () => (_jsx(DefaultCard, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }));
     return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", children: [_jsx("div", { "data-name": "onborda-site", className: "relative block w-full", children: children }), pointerPosition && showOnborda && (_jsx(motion.div, { "data-name": "onborda-overlay", className: "fixed inset-0 z-[995] pointer-events-none", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
                         boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
                         borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
@@ -202,6 +223,6 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", }) => {
                             width: pointerPosition.width + pointerPadding,
                             height: pointerPosition.height + pointerPadding,
                         }
-                        : {}, transition: { ease: "anticipate", duration: 0.6 }, children: _jsxs("div", { className: "absolute flex flex-col w-[400px] p-8 text-black transition-all bg-white shadow-lg rounded-lg min-w-min pointer-events-auto", "data-name": "onborda-card", style: getCardStyle(steps[currentStep]?.side), children: [_jsx("div", { "data-name": "onborda-arrow", className: "absolute w-5 h-5 origin-center bg-white", style: getArrowStyle(steps[currentStep]?.side) }), _jsxs("div", { className: "flex items-center justify-between gap-5 mb-3", children: [_jsxs("h2", { className: "text-xl font-bold", children: [steps[currentStep]?.icon, " ", steps[currentStep]?.title] }), _jsxs("div", { className: "text-slate-300 text-base font-semibold", children: [currentStep + 1, " of ", steps.length] })] }), _jsx("div", { "data-name": "onborda-stepper", className: "flex w-full gap-1 mb-8", children: steps.map((_, index) => (_jsx("span", { "data-name": "onborda-step", className: `self-stretch w-full h-1 rounded-xl ${index === currentStep ? "bg-indigo-600" : "bg-indigo-100"}` }, index))) }), _jsx("div", { className: "text-[15px]", children: steps[currentStep]?.content }), steps[currentStep]?.showControls && (_jsxs("div", { className: "flex items-center w-full gap-4 mt-4", children: [_jsx("button", { "data-control": "prev", onClick: prevStep, className: "rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700", children: "Prev" }), _jsx("button", { "data-control": "next", onClick: nextStep, className: "rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-red-700 ml-auto", children: "Next" })] }))] }) }) }))] }));
+                        : {}, transition: { ease: "anticipate", duration: 0.6 }, children: _jsx("div", { className: "absolute flex flex-col w-[400px] transition-all min-w-min pointer-events-auto", "data-name": "onborda-card", style: getCardStyle(steps[currentStep]?.side), children: _jsx(CardToRender, {}) }) }) }))] }));
 };
 export default Onborda;

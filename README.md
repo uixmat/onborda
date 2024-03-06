@@ -1,11 +1,11 @@
-# Onborda
-Onborda is a lightweight onboarding flow that utilises [framer-motion](https://www.framer.com/motion/) for animations and [tailwindcss](https://tailwindcss.com/) for styling.
+# Onborda - Next.js onboarding flow
+Onborda is a lightweight onboarding flow that utilises [framer-motion](https://www.framer.com/motion/) for animations and [tailwindcss](https://tailwindcss.com/) for styling. Fully customisable pointers (tooltips) that can easily be used with [shadcn/ui](https://ui.shadcn.com/) for modern web applications.
 
-## Demo
+- **Demo - [onborda.vercel.app](https://onborda.vercel.app)**
+- **[Demo repository](https://github.com/uixmat/onborda-demo)**
 
-- [onborda.vercel.app](https://onborda.vercel.app)
 
-### Install
+## Getting started
 ```bash
 # npm
 npm i onborda
@@ -15,7 +15,7 @@ pnpm add onborda
 yarn add onborda
 ```
 
-### `layout.tsx`
+### Global `layout.tsx`
 ```tsx
 <OnbordaProvider>
   <Onborda steps={steps} showOnborda={true}>
@@ -24,13 +24,13 @@ yarn add onborda
  </OnbordaProvider>
 ```
 
-### `page.tsx` and Components
+### Components & `page.tsx`
 Target anything in your app using the elements `id` attribute.
 ```tsx
 <div id="onborda-step1">Onboard Step</div>
 ```
 
-## Setup
+### Tailwind config
 Tailwind CSS will need to scan the node module in order to include the classes used. See [configuring source paths](https://tailwindcss.com/docs/content-configuration#configuring-source-paths) for more information about this topic.
 
 ```ts
@@ -41,29 +41,98 @@ const config: Config = {
 }
 ```
 
-## Options
+### Custom Card 
+If you require greater control over the card design or simply wish to create a totally custom component then you can do so easily.
 
-### Steps
+| Prop          | Type             | Description                                                          |
+|---------------|------------------|----------------------------------------------------------------------|
+| `step`         | `Object`          | The current `Step` object from your steps array, including content, title, etc.         |
+| `currentStep`   | `number`         | The index of the current step in the steps array.                    |
+| `totalSteps`    | `number`         | The total number of steps in the onboarding process.                 |
+| `nextStep`      |                  | A function to advance to the next step in the onboarding process.    |
+| `prevStep`      |                  | A function to go back to the previous step in the onboarding process.|
+| `arrow`         |                  | Returns an SVG object, the orientation is controlled by the steps side prop |
 
-| Property        | Type                       | Description                                                                           |
-|-----------------|----------------------------|---------------------------------------------------------------------------------------|
-| `icon`          | `React.ReactNode`, `string`, `null` | An icon or text to display alongside the step title.                                  |
-| `title`         | `string`                   | The title of the step.                                                                |
-| `content`       | `React.ReactNode`          | The content to display for the step. Can include JSX/React components.                |
-| `selector`      | `string`                   | A CSS selector to attach the step to a specific DOM element.                          |
-| `side`          | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. The side where the step card should appear relative to the element.         |
-| `showControls`  | `boolean`                  | Optional. If `true`, shows navigation controls on the step.                           |
-| `pointerPadding`| `number`                   | Optional. Padding around the highlighted area in pixels.                              |
-| `pointerRadius` | `number`                   | Optional. The border-radius of the highlighted area.                                  |
-| `nextRoute`     | `string`                   | Optional. Uses `useRouter` from next/navigation to push route changes                 |
-| `prevRoute`     | `string`                   | Optional. Uses `useRouter` from next/navigation to push route changes                 |
+```tsx
+"use client"
+import type { CardComponentProps } from "onborda";
+
+export const CustomCard = ({
+  step,
+  currentStep,
+  totalSteps,
+  nextStep,
+  prevStep,
+  arrow,
+}: CardComponentProps) => {
+  return (
+    <div>
+      <h1>{step.icon} {step.title}</h1>
+      <h2>{currentStep} of {totalSteps}</h2>
+      <p>{step.content}</p>
+      <button onClick={prevStep}>Previous</button>
+      <button onClick={nextStep}>Next</button>
+      {arrow}
+    </div>
+  )
+}
+```
+
+
+### Step object
+
+| Prop           | Type                          | Description                                                                           |
+|----------------|-------------------------------|---------------------------------------------------------------------------------------|
+| `icon`           | `React.ReactNode`, `string`, `null` | An icon or element to display alongside the step title.                                |
+| `title`          | `string`                        | The title of your step                     |
+| `content`        | `React.ReactNode`               | The main content or body of the step.                                                 |
+| `selector`       | `string`                        | A string used to target an `id` that this step refers to.            |
+| `side`           | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.          |
+| `showControls`   | `boolean`                       | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.           |
+| `pointerPadding` | `number`                        | Optional. The padding around the pointer (keyhole) highlighting the target element.             |
+| `pointerRadius`  | `number`                        | Optional. The border-radius of the pointer (keyhole) highlighting the target element.           |
+| `nextRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the next step.                      |
+| `prevRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                  |
+
+### Example `steps`
+
+```tsx
+[
+  {
+    icon: <>👋</>,
+    title: "Step 1",
+    content: <>This is the first step</>,
+    selector: "#onborda-step1",
+    side: "top",
+    showControls: true,
+    pointerPadding: 10,
+    pointerRadius: 10,
+    nextRoute: "/foo",
+    prevRoute: "/bar"
+  }
+]
+```
 
 ### Onborda Props
 
 | Property        | Type                       | Description                                                                           |
 |-----------------|----------------------------|---------------------------------------------------------------------------------------|
-| `children`      | `React.ReactNode`          | The children elements that the onboarding steps will be rendered over.                |
-| `steps`         | `Step[]`                   | An array of `Step` objects defining each step of the onboarding process.              |
-| `showOnborda`   | `boolean`                  | Optional. Controls the visibility of the onboarding overlay.                          |
-| `shadowRgb`     | `string`                   | Optional. The RGB values for the shadow color surrounding the highlighted area.       |
-| `shadowOpacity` | `string`                   | Optional. The opacity value for the shadow surrounding the highlighted area.          |
+| `children`      | `React.ReactNode`          | Your website or application content.                |
+| `steps`         | `Array[]`                   | An array of `Step` objects defining each step of the onboarding process.              |
+| `showOnborda`   | `boolean`                  | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `true`.                         |
+| `shadowRgb`     | `string`   | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |
+| `shadowOpacity` | `string`                   | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`          |
+| `customCard`    | `React.ReactNode`     | Optional. A custom card (or tooltip) that can be used to replace the default TailwindCSS card. |
+
+
+```tsx
+<Onborda
+  steps={steps}
+  showOnborda={true}
+  shadowRgb="55,48,163"
+  shadowOpacity="0.8"
+  cardComponent={CustomCard}
+>
+  {children}
+</Onborda>
+```

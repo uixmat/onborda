@@ -1,23 +1,4 @@
 import React from "react";
-interface Step {
-    icon: React.ReactNode | string | null;
-    title: string;
-    content: React.ReactNode;
-    selector: string;
-    side?: "top" | "bottom" | "left" | "right";
-    showControls?: boolean;
-    pointerPadding?: number;
-    pointerRadius?: number;
-    onClick?: () => void;
-    nextRoute?: string;
-    prevRoute?: string;
-}
-interface OnbordaProps {
-    children: React.ReactNode;
-    steps: Step[];
-    showOnborda?: boolean;
-    shadowRgb?: string;
-    shadowOpacity?: string;
-}
+import { OnbordaProps } from "./types";
 declare const Onborda: React.FC<OnbordaProps>;
 export default Onborda;

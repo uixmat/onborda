@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 
 // Types
-import { Step, OnbordaProps } from "./types";
+import { CardComponentProps, OnbordaProps } from "./types";
 
 const Onborda: React.FC<OnbordaProps> = ({
   children,
@@ -13,6 +13,7 @@ const Onborda: React.FC<OnbordaProps> = ({
   showOnborda = false, // Default to false
   shadowRgb = "0, 0, 0",
   shadowOpacity = "0.2",
+  cardComponent: CardComponent,
 }) => {
   const { currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
   const [pointerPosition, setPointerPosition] = useState<{
@@ -22,10 +23,17 @@ const Onborda: React.FC<OnbordaProps> = ({
     height: number;
   } | null>(null);
   const currentElementRef = useRef<Element | null>(null);
+  const params = useParams<{ step: string }>();
 
   // - -
   // Route Changes
   const router = useRouter();
+  const pathname = usePathname();
+  useEffect(() => {
+    if (params.step) {
+      setCurrentStep(parseInt(params.step));
+    }
+  }, [params.step]);
 
   // - -
   // Helper function to get element position
@@ -112,15 +120,16 @@ const Onborda: React.FC<OnbordaProps> = ({
   const prevStep = async () => {
     if (currentStep > 0) {
       try {
-        const route = steps[currentStep - 1]?.prevRoute;
+        const route = steps[currentStep].prevRoute;
         if (route) {
-          await router.push(route);
+          await router.push(route + "?step=" + (currentStep - 1));
           setCurrentStep(currentStep - 1);
         } else {
           setCurrentStep(currentStep - 1);
+          router.push(pathname);
         }
       } catch (error) {
-        console.error("Error navigating to previous route", error);
+        console.error("Error navigating to next route", error);
       }
     }
   };
@@ -168,31 +177,46 @@ const Onborda: React.FC<OnbordaProps> = ({
     switch (side) {
       case "bottom":
         return {
-          transform: `translate(-50%, 0) rotate(45deg)`,
+          transform: `translate(-50%, 0) rotate(270deg)`,
           left: "50%",
-          top: "-10px",
+          top: "-23px",
         };
       case "top":
         return {
-          transform: `translate(-50%, 0) rotate(45deg)`,
+          transform: `translate(-50%, 0) rotate(90deg)`,
           left: "50%",
-          bottom: "-10px",
+          bottom: "-23px",
         };
       case "right":
         return {
-          transform: `translate(0, -50%) rotate(45deg)`,
+          transform: `translate(0, -50%) rotate(180deg)`,
           top: "50%",
-          left: "-10px",
+          left: "-23px",
         };
       case "left":
         return {
-          transform: `translate(0, -50%) rotate(45deg)`,
+          transform: `translate(0, -50%) rotate(0deg)`,
           top: "50%",
-          right: "-10px",
+          right: "-23px",
         };
       default:
         return {}; // Default case if no side is specified
     }
+  };
+
+  // - -
+  // Card Arrow
+  const CardArrow = () => {
+    return (
+      <svg
+        viewBox="0 0 54 54"
+        data-name="onborda-arrow"
+        className="absolute w-6 h-6 origin-center"
+        style={getArrowStyle(steps[currentStep]?.side as any)}
+      >
+        <path id="triangle" d="M27 27L0 0V54L27 27Z" fill="currentColor" />
+      </svg>
+    );
   };
 
   // - -
@@ -207,6 +231,84 @@ const Onborda: React.FC<OnbordaProps> = ({
   const pointerPadding = steps[currentStep]?.pointerPadding ?? 30;
   const pointerPadOffset = pointerPadding / 2;
   const pointerRadius = steps[currentStep]?.pointerRadius ?? 28;
+
+  // - -
+  // Default Card
+  const DefaultCard = ({
+    currentStep,
+    nextStep,
+    prevStep,
+    arrow,
+  }: CardComponentProps) => {
+    return (
+      <div className="flex flex-col w-full bg-white p-4 rounded-md text-black">
+        <div className="flex items-center justify-between gap-5 mb-3">
+          <h2 className="text-xl font-bold">
+            {steps[currentStep]?.icon} {steps[currentStep]?.title}
+          </h2>
+          <div className="text-slate-300 text-base font-semibold">
+            {currentStep + 1} of {steps.length}
+          </div>
+        </div>
+
+        <div data-name="onborda-stepper" className="flex w-full gap-1 mb-8">
+          {steps.map((_, index) => (
+            <span
+              key={index}
+              data-name="onborda-step"
+              className={`self-stretch w-full h-1 rounded-xl ${
+                index === currentStep ? "bg-indigo-600" : "bg-indigo-100"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="text-[15px]">{steps[currentStep]?.content}</div>
+
+        {steps[currentStep]?.showControls && (
+          <div className="flex items-center w-full gap-4 mt-4">
+            <button
+              data-control="prev"
+              onClick={prevStep}
+              className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Prev
+            </button>
+            <button
+              data-control="next"
+              onClick={nextStep}
+              className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700 ml-auto"
+            >
+              Next
+            </button>
+          </div>
+        )}
+        <span className="text-white">{arrow}</span>
+      </div>
+    );
+  };
+
+  const CardToRender = CardComponent
+    ? () => (
+        <CardComponent
+          step={steps[currentStep]}
+          currentStep={currentStep}
+          totalSteps={steps.length}
+          nextStep={nextStep}
+          prevStep={prevStep}
+          arrow={<CardArrow />}
+        />
+      )
+    : () => (
+        <DefaultCard
+          step={steps[currentStep]}
+          currentStep={currentStep}
+          totalSteps={steps.length}
+          nextStep={nextStep}
+          prevStep={prevStep}
+          arrow={<CardArrow />}
+        />
+      );
 
   return (
     <div data-name="onborda-wrapper" className="relative w-full">
@@ -256,63 +358,11 @@ const Onborda: React.FC<OnbordaProps> = ({
           >
             {/* Card */}
             <div
-              className="absolute flex flex-col w-[400px] p-8 text-black transition-all bg-white shadow-lg rounded-lg min-w-min pointer-events-auto"
+              className="absolute flex flex-col w-[400px] transition-all min-w-min pointer-events-auto"
               data-name="onborda-card"
               style={getCardStyle(steps[currentStep]?.side as any)}
             >
-              {/* Card Arrow */}
-              <div
-                data-name="onborda-arrow"
-                className="absolute w-5 h-5 origin-center bg-white"
-                style={getArrowStyle(steps[currentStep]?.side as any)}
-              />
-              {/* Card Header */}
-              <div className="flex items-center justify-between gap-5 mb-3">
-                <h2 className="text-xl font-bold">
-                  {steps[currentStep]?.icon} {steps[currentStep]?.title}
-                </h2>
-                <div className="text-slate-300 text-base font-semibold">
-                  {currentStep + 1} of {steps.length}
-                </div>
-              </div>
-              {/* Card Stepper */}
-              <div
-                data-name="onborda-stepper"
-                className="flex w-full gap-1 mb-8"
-              >
-                {steps.map((_, index) => (
-                  <span
-                    key={index}
-                    data-name="onborda-step"
-                    className={`self-stretch w-full h-1 rounded-xl ${
-                      index === currentStep ? "bg-indigo-600" : "bg-indigo-100"
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Card Content */}
-              <div className="text-[15px]">{steps[currentStep]?.content}</div>
-
-              {/* Stepper Controls */}
-              {steps[currentStep]?.showControls && (
-                <div className="flex items-center w-full gap-4 mt-4">
-                  <button
-                    data-control="prev"
-                    onClick={prevStep}
-                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    data-control="next"
-                    onClick={nextStep}
-                    className="rounded-sm px-5 py-3 outline-none inline-flex items-center text-white bg-indigo-600 hover:bg-red-700 ml-auto"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
+              <CardToRender />
             </div>
           </motion.div>
         </motion.div>

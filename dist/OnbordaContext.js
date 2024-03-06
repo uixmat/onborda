@@ -1,6 +1,12 @@
 "use client";
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useState, useCallback } from "react";
+// Example Hooks Usage:
+// const { setCurrentStep, closeOnborda } = useOnborda();
+// // To trigger a specific step
+// setCurrentStep(2); // Opens the onboarding overlay and goes to step 3
+// // To close the onboarding
+// closeOnborda(); // Closes the onboarding overlay
 const OnbordaContext = createContext(undefined);
 const useOnborda = () => {
     const context = useContext(OnbordaContext);

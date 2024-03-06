@@ -18,8 +18,6 @@ export interface Step {
   showControls?: boolean;
   pointerPadding?: number;
   pointerRadius?: number;
-  // Callbacks
-  onClick?: () => void;
   // Routing
   nextRoute?: string;
   prevRoute?: string;
@@ -32,4 +30,15 @@ export interface OnbordaProps {
   showOnborda?: boolean;
   shadowRgb?: string;
   shadowOpacity?: string;
+  cardComponent?: React.ComponentType<CardComponentProps>;
+}
+
+// Custom Card
+export interface CardComponentProps {
+  step: Step;
+  currentStep: number;
+  totalSteps: number;
+  nextStep: () => void;
+  prevStep: () => void;
+  arrow: JSX.Element;
 }
