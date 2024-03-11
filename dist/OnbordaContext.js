@@ -2,7 +2,7 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useState, useCallback } from "react";
 // Example Hooks Usage:
-// const { setCurrentStep, closeOnborda } = useOnborda();
+// const { setCurrentStep, closeOnborda, startOnborda } = useOnborda();
 // // To trigger a specific step
 // setCurrentStep(2); // Opens the onboarding overlay and goes to step 3
 // // To close the onboarding
@@ -33,6 +33,15 @@ const OnbordaProvider = ({ children, }) => {
     const closeOnborda = useCallback(() => {
         setOnbordaVisible(false);
     }, []);
-    return (_jsx(OnbordaContext.Provider, { value: { currentStep, setCurrentStep, closeOnborda, isOnbordaVisible }, children: children }));
+    const startOnborda = useCallback(() => {
+        setOnbordaVisible(true);
+    }, []);
+    return (_jsx(OnbordaContext.Provider, { value: {
+            currentStep,
+            setCurrentStep,
+            closeOnborda,
+            startOnborda,
+            isOnbordaVisible,
+        }, children: children }));
 };
 export { OnbordaProvider, useOnborda };

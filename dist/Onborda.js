@@ -2,23 +2,38 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useRouter, useParams, usePathname } from "next/navigation";
 const Onborda = ({ children, steps, showOnborda = false, // Default to false
 shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) => {
     const { currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
+    const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
+    const observeRef = useRef(null); // Ref for the observer element
+    const isInView = useInView(observeRef);
     const params = useParams();
+    const offset = 20;
     // - -
     // Route Changes
     const router = useRouter();
     const pathname = usePathname();
+    // - -
+    // Initialisze
     useEffect(() => {
-        if (params.step) {
-            setCurrentStep(parseInt(params.step));
+        if (showOnborda) {
+            console.log("Onborda: Initialising...");
+            if (params.step) {
+                setCurrentStep(parseInt(params.step));
+            }
+            if (steps.length > 0) {
+                const firstStepElement = document.querySelector(steps[0].selector);
+                if (firstStepElement) {
+                    setPointerPosition(getElementPosition(firstStepElement));
+                }
+            }
         }
-    }, [params.step]);
+    }, [params.step, steps, showOnborda]);
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {
@@ -33,107 +48,90 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
         };
     };
     // - -
-    // Initialize and update step positioning
-    useEffect(() => {
-        if (steps.length > 0) {
-            const firstStepElement = document.querySelector(steps[0].selector);
-            if (firstStepElement) {
-                const position = getElementPosition(firstStepElement);
-                setPointerPosition(position);
-            }
-        }
-    }, [steps]); // Dependency on steps ensures this runs once after initial render
-    // - -
     // Update pointerPosition when currentStep changes
     useEffect(() => {
-        const step = steps[currentStep];
-        if (step) {
-            const element = document.querySelector(step.selector);
-            if (element) {
-                scrollToElementIfNeeded(element);
-                setPointerPosition(getElementPosition(element));
+        if (showOnborda) {
+            console.log("Onborda: Current Step Changed");
+            const step = steps[currentStep];
+            if (step) {
+                const element = document.querySelector(step.selector);
+                if (element) {
+                    setPointerPosition(getElementPosition(element));
+                    currentElementRef.current = element; // Set the current element reference
+                    setElementToScroll(element); // Set the element to be scrolled into view
+                    const rect = element.getBoundingClientRect();
+                    // Determine if the element is within the viewport + offset
+                    const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
+                    if (!isInView || !isInViewportWithOffset) {
+                        element.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                }
             }
         }
-    }, [currentStep, steps]); // Reacting to currentStep changes
-    // - -
-    // Scroll to element if it's not in the viewport
-    const scrollToElementIfNeeded = (element) => {
-        if (!isElementInViewport(element)) {
-            element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, [currentStep, steps, isInView, offset, showOnborda]);
+    useEffect(() => {
+        if (elementToScroll && !isInView && showOnborda) {
+            console.log("Onborda: Element to Scroll Changed");
+            const rect = elementToScroll.getBoundingClientRect();
+            const isAbove = rect.top < 0;
+            elementToScroll.scrollIntoView({
+                behavior: "smooth",
+                block: isAbove ? "center" : "center",
+                inline: "center",
+            });
         }
-    };
+    }, [elementToScroll, isInView, showOnborda]);
     // - -
-    // Check if element is in the viewport
-    const isElementInViewport = (el) => {
-        const rect = el.getBoundingClientRect();
-        return (rect.top >= 0 &&
-            rect.bottom <=
-                (window.innerHeight || document.documentElement.clientHeight));
-    };
-    // - -
-    // Update pointerPosition for currentStep changes or window resize
+    // Update pointer position on window resize
     const updatePointerPosition = () => {
         const step = steps[currentStep];
         if (step) {
             const element = document.querySelector(step.selector);
             if (element) {
                 setPointerPosition(getElementPosition(element));
-                currentElementRef.current = element;
             }
         }
     };
     // - -
     // Update pointer position on window resize
     useEffect(() => {
-        updatePointerPosition();
-        // Add window resize listener
-        window.addEventListener("resize", updatePointerPosition);
-        return () => {
-            // Cleanup resize listener
-            window.removeEventListener("resize", updatePointerPosition);
-        };
-    }, [currentStep, steps]);
+        if (showOnborda) {
+            window.addEventListener("resize", updatePointerPosition);
+            return () => window.removeEventListener("resize", updatePointerPosition);
+        }
+    }, [currentStep, steps, showOnborda]);
     // - -
     // Step Controls
-    const nextStep = async () => {
-        if (currentStep < steps.length - 1) {
-            try {
-                const nextStepIndex = currentStep + 1;
-                const route = steps[nextStepIndex].nextRoute;
-                if (route) {
-                    await router.push(route);
-                }
-                setCurrentStep(nextStepIndex);
-                const nextStepElement = document.querySelector(steps[nextStepIndex].selector);
-                if (nextStepElement) {
-                    scrollToElementIfNeeded(nextStepElement);
-                }
-            }
-            catch (error) {
-                console.error("Error navigating to next route", error);
+    const navigateStep = async (stepIndex, route) => {
+        if (route) {
+            await router.push(route);
+        }
+        setCurrentStep(stepIndex);
+        const stepElement = document.querySelector(steps[stepIndex].selector);
+        if (stepElement) {
+            const { top } = stepElement.getBoundingClientRect();
+            const isInViewport = top >= -offset &&
+                top <=
+                    (window.innerHeight || document.documentElement.clientHeight) +
+                        offset;
+            if (!isInViewport) {
+                window.scrollBy({
+                    top: top - window.innerHeight / 2 + offset,
+                    behavior: "smooth",
+                });
             }
         }
     };
-    const prevStep = async () => {
+    const nextStep = async (event) => {
+        event?.preventDefault();
+        if (currentStep < steps.length - 1) {
+            await navigateStep(currentStep + 1, steps[currentStep + 1].nextRoute);
+        }
+    };
+    const prevStep = async (event) => {
+        event?.preventDefault();
         if (currentStep > 0) {
-            try {
-                const prevStepIndex = currentStep - 1;
-                const route = steps[prevStepIndex].prevRoute;
-                if (route) {
-                    await router.push(route + "?step=" + prevStepIndex);
-                }
-                else {
-                    router.push(pathname);
-                }
-                setCurrentStep(prevStepIndex);
-                const prevStepElement = document.querySelector(steps[prevStepIndex].selector);
-                if (prevStepElement) {
-                    scrollToElementIfNeeded(prevStepElement);
-                }
-            }
-            catch (error) {
-                console.error("Error navigating to next route", error);
-            }
+            await navigateStep(currentStep - 1, steps[currentStep - 1].prevRoute);
         }
     };
     // - -

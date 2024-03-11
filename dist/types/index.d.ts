@@ -3,6 +3,7 @@ export interface OnbordaContextType {
     currentStep: number;
     setCurrentStep: (step: number, delay?: number) => void;
     closeOnborda: () => void;
+    startOnborda: () => void;
     isOnbordaVisible: boolean;
 }
 export interface Step {

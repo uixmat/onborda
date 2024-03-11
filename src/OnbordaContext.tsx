@@ -5,13 +5,14 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { OnbordaContextType } from "./types";
 
 // Example Hooks Usage:
-// const { setCurrentStep, closeOnborda } = useOnborda();
+// const { setCurrentStep, closeOnborda, startOnborda } = useOnborda();
 
 // // To trigger a specific step
-// setCurrentStep(2); // Opens the onboarding overlay and goes to step 3
+// setCurrentStep(2); // step 3
 
-// // To close the onboarding
-// closeOnborda(); // Closes the onboarding overlay
+// // To close/start onboarding
+// closeOnborda();
+// startOnborda();
 
 const OnbordaContext = createContext<OnbordaContextType | undefined>(undefined);
 
@@ -45,9 +46,19 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
     setOnbordaVisible(false);
   }, []);
 
+  const startOnborda = useCallback(() => {
+    setOnbordaVisible(true);
+  }, []);
+
   return (
     <OnbordaContext.Provider
-      value={{ currentStep, setCurrentStep, closeOnborda, isOnbordaVisible }}
+      value={{
+        currentStep,
+        setCurrentStep,
+        closeOnborda,
+        startOnborda,
+        isOnbordaVisible,
+      }}
     >
       {children}
     </OnbordaContext.Provider>
