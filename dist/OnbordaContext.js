@@ -4,9 +4,10 @@ import { createContext, useContext, useState, useCallback } from "react";
 // Example Hooks Usage:
 // const { setCurrentStep, closeOnborda, startOnborda } = useOnborda();
 // // To trigger a specific step
-// setCurrentStep(2); // Opens the onboarding overlay and goes to step 3
-// // To close the onboarding
-// closeOnborda(); // Closes the onboarding overlay
+// setCurrentStep(2); // step 3
+// // To close/start onboarding
+// closeOnborda();
+// startOnborda();
 const OnbordaContext = createContext(undefined);
 const useOnborda = () => {
     const context = useContext(OnbordaContext);
@@ -17,7 +18,7 @@ const useOnborda = () => {
 };
 const OnbordaProvider = ({ children, }) => {
     const [currentStep, setCurrentStepState] = useState(0);
-    const [isOnbordaVisible, setOnbordaVisible] = useState(true);
+    const [isOnbordaVisible, setOnbordaVisible] = useState(false);
     const setCurrentStep = useCallback((step, delay) => {
         if (delay) {
             setTimeout(() => {
@@ -34,6 +35,7 @@ const OnbordaProvider = ({ children, }) => {
         setOnbordaVisible(false);
     }, []);
     const startOnborda = useCallback(() => {
+        setCurrentStepState(0);
         setOnbordaVisible(true);
     }, []);
     return (_jsx(OnbordaContext.Provider, { value: {

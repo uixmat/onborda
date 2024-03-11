@@ -10,7 +10,6 @@ import { CardComponentProps, OnbordaProps } from "./types";
 const Onborda: React.FC<OnbordaProps> = ({
   children,
   steps,
-  showOnborda = false, // Default to false
   shadowRgb = "0, 0, 0",
   shadowOpacity = "0.2",
   cardComponent: CardComponent,
@@ -37,7 +36,7 @@ const Onborda: React.FC<OnbordaProps> = ({
   // - -
   // Initialisze
   useEffect(() => {
-    if (showOnborda) {
+    if (isOnbordaVisible) {
       console.log("Onborda: Initialising...");
       if (params.step) {
         setCurrentStep(parseInt(params.step));
@@ -49,7 +48,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         }
       }
     }
-  }, [params.step, steps, showOnborda]);
+  }, [params.step, steps, isOnbordaVisible]);
 
   // - -
   // Helper function to get element position
@@ -68,7 +67,7 @@ const Onborda: React.FC<OnbordaProps> = ({
   // - -
   // Update pointerPosition when currentStep changes
   useEffect(() => {
-    if (showOnborda) {
+    if (isOnbordaVisible) {
       console.log("Onborda: Current Step Changed");
       const step = steps[currentStep];
       if (step) {
@@ -89,10 +88,10 @@ const Onborda: React.FC<OnbordaProps> = ({
         }
       }
     }
-  }, [currentStep, steps, isInView, offset, showOnborda]);
+  }, [currentStep, steps, isInView, offset, isOnbordaVisible]);
 
   useEffect(() => {
-    if (elementToScroll && !isInView && showOnborda) {
+    if (elementToScroll && !isInView && isOnbordaVisible) {
       console.log("Onborda: Element to Scroll Changed");
       const rect = elementToScroll.getBoundingClientRect();
       const isAbove = rect.top < 0;
@@ -102,7 +101,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         inline: "center",
       });
     }
-  }, [elementToScroll, isInView, showOnborda]);
+  }, [elementToScroll, isInView, isOnbordaVisible]);
 
   // - -
   // Update pointer position on window resize
@@ -119,50 +118,67 @@ const Onborda: React.FC<OnbordaProps> = ({
   // - -
   // Update pointer position on window resize
   useEffect(() => {
-    if (showOnborda) {
+    if (isOnbordaVisible) {
       window.addEventListener("resize", updatePointerPosition);
       return () => window.removeEventListener("resize", updatePointerPosition);
     }
-  }, [currentStep, steps, showOnborda]);
+  }, [currentStep, steps, isOnbordaVisible]);
 
   // - -
   // Step Controls
-  const navigateStep = async (stepIndex: number, route?: string) => {
-    if (route) {
-      await router.push(route);
-    }
-    setCurrentStep(stepIndex);
-    const stepElement = document.querySelector(
-      steps[stepIndex].selector
-    ) as Element;
-    if (stepElement) {
-      const { top } = stepElement.getBoundingClientRect();
-      const isInViewport =
-        top >= -offset &&
-        top <=
-          (window.innerHeight || document.documentElement.clientHeight) +
-            offset;
-
-      if (!isInViewport) {
-        window.scrollBy({
-          top: top - window.innerHeight / 2 + offset,
-          behavior: "smooth",
-        });
+  const nextStep = async () => {
+    if (currentStep < steps.length - 1) {
+      try {
+        const nextStepIndex = currentStep + 1;
+        const route = steps[currentStep].nextRoute; // Get nextRoute from the current step
+        if (route) {
+          await router.push(route);
+          setTimeout(() => {
+            setCurrentStep(nextStepIndex);
+            scrollToElement(nextStepIndex);
+          }, 500); // Delay only if there's a route change
+        } else {
+          setCurrentStep(nextStepIndex);
+          scrollToElement(nextStepIndex);
+        }
+      } catch (error) {
+        console.error("Error navigating to next route", error);
       }
     }
   };
 
-  const nextStep = async (event?: React.MouseEvent<HTMLButtonElement>) => {
-    event?.preventDefault();
-    if (currentStep < steps.length - 1) {
-      await navigateStep(currentStep + 1, steps[currentStep + 1].nextRoute);
+  const prevStep = async () => {
+    if (currentStep > 0) {
+      try {
+        const prevStepIndex = currentStep - 1;
+        const route = steps[currentStep].prevRoute; // Get prevRoute from the current step
+        if (route) {
+          await router.push(`${route}?step=${prevStepIndex}`);
+          setTimeout(() => {
+            setCurrentStep(prevStepIndex);
+            scrollToElement(prevStepIndex);
+          }, 500); // Delay only if there's a route change
+          router.replace(route); // Clean up the URL
+        } else {
+          setCurrentStep(prevStepIndex);
+          scrollToElement(prevStepIndex);
+        }
+      } catch (error) {
+        console.error("Error navigating to previous route", error);
+      }
     }
   };
 
-  const prevStep = async (event?: React.MouseEvent<HTMLButtonElement>) => {
-    event?.preventDefault();
-    if (currentStep > 0) {
-      await navigateStep(currentStep - 1, steps[currentStep - 1].prevRoute);
+  const scrollToElement = (stepIndex: number) => {
+    const element = document.querySelector(
+      steps[stepIndex].selector
+    ) as Element | null;
+    if (element) {
+      const { top } = element.getBoundingClientRect();
+      const isInViewport = top >= -offset && top <= window.innerHeight + offset;
+      if (!isInViewport) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
   };
 
@@ -354,7 +370,7 @@ const Onborda: React.FC<OnbordaProps> = ({
       </div>
 
       {/* Onborda Overlay Step Content */}
-      {pointerPosition && showOnborda && (
+      {pointerPosition && isOnbordaVisible && (
         <motion.div
           data-name="onborda-overlay"
           className="absolute inset-0 z-[995] pointer-events-none"

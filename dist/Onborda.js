@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion, useInView } from "framer-motion";
 import { useRouter, useParams, usePathname } from "next/navigation";
-const Onborda = ({ children, steps, showOnborda = false, // Default to false
-shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) => {
+const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) => {
     const { currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
     const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
@@ -21,7 +20,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     // - -
     // Initialisze
     useEffect(() => {
-        if (showOnborda) {
+        if (isOnbordaVisible) {
             console.log("Onborda: Initialising...");
             if (params.step) {
                 setCurrentStep(parseInt(params.step));
@@ -33,7 +32,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
                 }
             }
         }
-    }, [params.step, steps, showOnborda]);
+    }, [params.step, steps, isOnbordaVisible]);
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {
@@ -50,7 +49,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     // - -
     // Update pointerPosition when currentStep changes
     useEffect(() => {
-        if (showOnborda) {
+        if (isOnbordaVisible) {
             console.log("Onborda: Current Step Changed");
             const step = steps[currentStep];
             if (step) {
@@ -68,9 +67,9 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
                 }
             }
         }
-    }, [currentStep, steps, isInView, offset, showOnborda]);
+    }, [currentStep, steps, isInView, offset, isOnbordaVisible]);
     useEffect(() => {
-        if (elementToScroll && !isInView && showOnborda) {
+        if (elementToScroll && !isInView && isOnbordaVisible) {
             console.log("Onborda: Element to Scroll Changed");
             const rect = elementToScroll.getBoundingClientRect();
             const isAbove = rect.top < 0;
@@ -80,7 +79,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
                 inline: "center",
             });
         }
-    }, [elementToScroll, isInView, showOnborda]);
+    }, [elementToScroll, isInView, isOnbordaVisible]);
     // - -
     // Update pointer position on window resize
     const updatePointerPosition = () => {
@@ -95,43 +94,66 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     // - -
     // Update pointer position on window resize
     useEffect(() => {
-        if (showOnborda) {
+        if (isOnbordaVisible) {
             window.addEventListener("resize", updatePointerPosition);
             return () => window.removeEventListener("resize", updatePointerPosition);
         }
-    }, [currentStep, steps, showOnborda]);
+    }, [currentStep, steps, isOnbordaVisible]);
     // - -
     // Step Controls
-    const navigateStep = async (stepIndex, route) => {
-        if (route) {
-            await router.push(route);
-        }
-        setCurrentStep(stepIndex);
-        const stepElement = document.querySelector(steps[stepIndex].selector);
-        if (stepElement) {
-            const { top } = stepElement.getBoundingClientRect();
-            const isInViewport = top >= -offset &&
-                top <=
-                    (window.innerHeight || document.documentElement.clientHeight) +
-                        offset;
-            if (!isInViewport) {
-                window.scrollBy({
-                    top: top - window.innerHeight / 2 + offset,
-                    behavior: "smooth",
-                });
+    const nextStep = async () => {
+        if (currentStep < steps.length - 1) {
+            try {
+                const nextStepIndex = currentStep + 1;
+                const route = steps[currentStep].nextRoute; // Get nextRoute from the current step
+                if (route) {
+                    await router.push(route);
+                    setTimeout(() => {
+                        setCurrentStep(nextStepIndex);
+                        scrollToElement(nextStepIndex);
+                    }, 500); // Delay only if there's a route change
+                }
+                else {
+                    setCurrentStep(nextStepIndex);
+                    scrollToElement(nextStepIndex);
+                }
+            }
+            catch (error) {
+                console.error("Error navigating to next route", error);
             }
         }
     };
-    const nextStep = async (event) => {
-        event?.preventDefault();
-        if (currentStep < steps.length - 1) {
-            await navigateStep(currentStep + 1, steps[currentStep + 1].nextRoute);
+    const prevStep = async () => {
+        if (currentStep > 0) {
+            try {
+                const prevStepIndex = currentStep - 1;
+                const route = steps[currentStep].prevRoute; // Get prevRoute from the current step
+                if (route) {
+                    await router.push(`${route}?step=${prevStepIndex}`);
+                    setTimeout(() => {
+                        setCurrentStep(prevStepIndex);
+                        scrollToElement(prevStepIndex);
+                    }, 500); // Delay only if there's a route change
+                    router.replace(route); // Clean up the URL
+                }
+                else {
+                    setCurrentStep(prevStepIndex);
+                    scrollToElement(prevStepIndex);
+                }
+            }
+            catch (error) {
+                console.error("Error navigating to previous route", error);
+            }
         }
     };
-    const prevStep = async (event) => {
-        event?.preventDefault();
-        if (currentStep > 0) {
-            await navigateStep(currentStep - 1, steps[currentStep - 1].prevRoute);
+    const scrollToElement = (stepIndex) => {
+        const element = document.querySelector(steps[stepIndex].selector);
+        if (element) {
+            const { top } = element.getBoundingClientRect();
+            const isInViewport = top >= -offset && top <= window.innerHeight + offset;
+            if (!isInViewport) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
         }
     };
     // - -
@@ -226,7 +248,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     const CardToRender = CardComponent
         ? () => (_jsx(CardComponent, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }))
         : () => (_jsx(DefaultCard, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }));
-    return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", "data-onborda": "dev", children: [_jsx("div", { "data-name": "onborda-site", className: "relative block w-full", children: children }), pointerPosition && showOnborda && (_jsx(motion.div, { "data-name": "onborda-overlay", className: "absolute inset-0 z-[995] pointer-events-none", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
+    return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", "data-onborda": "dev", children: [_jsx("div", { "data-name": "onborda-site", className: "relative block w-full", children: children }), pointerPosition && isOnbordaVisible && (_jsx(motion.div, { "data-name": "onborda-overlay", className: "absolute inset-0 z-[995] pointer-events-none", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
                         boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
                         borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
                     }, initial: pointerPosition

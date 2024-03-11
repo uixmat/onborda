@@ -28,7 +28,7 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [currentStep, setCurrentStepState] = useState(0);
-  const [isOnbordaVisible, setOnbordaVisible] = useState(true);
+  const [isOnbordaVisible, setOnbordaVisible] = useState(false);
 
   const setCurrentStep = useCallback((step: number, delay?: number) => {
     if (delay) {
@@ -47,6 +47,7 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const startOnborda = useCallback(() => {
+    setCurrentStepState(0);
     setOnbordaVisible(true);
   }, []);
 
