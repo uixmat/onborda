@@ -18,7 +18,7 @@ yarn add onborda
 ### Global `layout.tsx`
 ```tsx
 <OnbordaProvider>
-  <Onborda steps={steps} showOnborda={true}>
+  <Onborda steps={steps}>
     {children}
   </Onborda>
  </OnbordaProvider>
@@ -32,6 +32,8 @@ Target anything in your app using the elements `id` attribute.
 
 ### Tailwind config
 Tailwind CSS will need to scan the node module in order to include the classes used. See [configuring source paths](https://tailwindcss.com/docs/content-configuration#configuring-source-paths) for more information about this topic.
+
+> **Note** _You only require this if you're **not using** a custom component.
 
 ```ts
 const config: Config = {
@@ -94,6 +96,8 @@ export const CustomCard = ({
 | `nextRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the next step.                      |
 | `prevRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                  |
 
+> **Note** _Both `nextRoute` and `prevRoute` have a `500`ms delay before setting the next step, a function will be added soon to control the delay in case your application loads slower than this._
+
 ### Example `steps`
 
 ```tsx
@@ -119,7 +123,7 @@ export const CustomCard = ({
 |-----------------|----------------------------|---------------------------------------------------------------------------------------|
 | `children`      | `React.ReactNode`          | Your website or application content.                |
 | `steps`         | `Array[]`                   | An array of `Step` objects defining each step of the onboarding process.              |
-| `showOnborda`   | `boolean`                  | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `true`.                         |
+| `showOnborda`   | `boolean`                  | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                         |
 | `shadowRgb`     | `string`   | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |
 | `shadowOpacity` | `string`                   | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`          |
 | `customCard`    | `React.ReactNode`     | Optional. A custom card (or tooltip) that can be used to replace the default TailwindCSS card. |
