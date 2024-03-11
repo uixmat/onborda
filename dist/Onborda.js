@@ -50,10 +50,26 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
         if (step) {
             const element = document.querySelector(step.selector);
             if (element) {
+                scrollToElementIfNeeded(element);
                 setPointerPosition(getElementPosition(element));
             }
         }
     }, [currentStep, steps]); // Reacting to currentStep changes
+    // - -
+    // Scroll to element if it's not in the viewport
+    const scrollToElementIfNeeded = (element) => {
+        if (!isElementInViewport(element)) {
+            element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+    };
+    // - -
+    // Check if element is in the viewport
+    const isElementInViewport = (el) => {
+        const rect = el.getBoundingClientRect();
+        return (rect.top >= 0 &&
+            rect.bottom <=
+                (window.innerHeight || document.documentElement.clientHeight));
+    };
     // - -
     // Update pointerPosition for currentStep changes or window resize
     const updatePointerPosition = () => {
@@ -82,13 +98,15 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     const nextStep = async () => {
         if (currentStep < steps.length - 1) {
             try {
-                const route = steps[currentStep].nextRoute;
+                const nextStepIndex = currentStep + 1;
+                const route = steps[nextStepIndex].nextRoute;
                 if (route) {
                     await router.push(route);
-                    setCurrentStep(currentStep + 1);
                 }
-                else {
-                    setCurrentStep(currentStep + 1);
+                setCurrentStep(nextStepIndex);
+                const nextStepElement = document.querySelector(steps[nextStepIndex].selector);
+                if (nextStepElement) {
+                    scrollToElementIfNeeded(nextStepElement);
                 }
             }
             catch (error) {
@@ -99,14 +117,18 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     const prevStep = async () => {
         if (currentStep > 0) {
             try {
-                const route = steps[currentStep].prevRoute;
+                const prevStepIndex = currentStep - 1;
+                const route = steps[prevStepIndex].prevRoute;
                 if (route) {
-                    await router.push(route + "?step=" + (currentStep - 1));
-                    setCurrentStep(currentStep - 1);
+                    await router.push(route + "?step=" + prevStepIndex);
                 }
                 else {
-                    setCurrentStep(currentStep - 1);
                     router.push(pathname);
+                }
+                setCurrentStep(prevStepIndex);
+                const prevStepElement = document.querySelector(steps[prevStepIndex].selector);
+                if (prevStepElement) {
+                    scrollToElementIfNeeded(prevStepElement);
                 }
             }
             catch (error) {
@@ -206,7 +228,7 @@ shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardComponent: CardComponent, }) =
     const CardToRender = CardComponent
         ? () => (_jsx(CardComponent, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }))
         : () => (_jsx(DefaultCard, { step: steps[currentStep], currentStep: currentStep, totalSteps: steps.length, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }));
-    return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", children: [_jsx("div", { "data-name": "onborda-site", className: "relative block w-full", children: children }), pointerPosition && showOnborda && (_jsx(motion.div, { "data-name": "onborda-overlay", className: "fixed inset-0 z-[995] pointer-events-none", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
+    return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", "data-onborda": "dev", children: [_jsx("div", { "data-name": "onborda-site", className: "relative block w-full", children: children }), pointerPosition && showOnborda && (_jsx(motion.div, { "data-name": "onborda-overlay", className: "absolute inset-0 z-[995] pointer-events-none", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
                         boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
                         borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
                     }, initial: pointerPosition
