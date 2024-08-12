@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { useOnborda } from "./OnbordaContext";
 import { motion, useInView } from "framer-motion";
-import { useRouter, useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { useOnborda } from "./OnbordaContext";
 
 // Types
 import { CardComponentProps, OnbordaProps } from "./types";
@@ -38,7 +38,7 @@ const Onborda: React.FC<OnbordaProps> = ({
   useEffect(() => {
     if (isOnbordaVisible) {
       console.log("Onborda: Initialising...");
-      if (params.step) {
+      if (params?.step) {
         setCurrentStep(parseInt(params.step));
       }
       if (steps.length > 0) {
@@ -48,7 +48,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         }
       }
     }
-  }, [params.step, steps, isOnbordaVisible]);
+  }, [params?.step, steps, isOnbordaVisible]);
 
   // - -
   // Helper function to get element position
