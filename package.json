@@ -25,9 +25,10 @@
   },
   "peerDependencies": {
     "framer-motion": ">=11",
-    "react-dom": ">=18",
+    "next": ">=13",
     "react": ">=18",
-    "next": ">=13"
+    "react-dom": ">=18",
+    "@radix-ui/react-portal": ">=1.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.63",

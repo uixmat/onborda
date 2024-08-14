@@ -27,6 +27,7 @@ const useOnborda = () => {
 const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const [currentTour, setCurrentTour] = useState<string | null>(null);
   const [currentStep, setCurrentStepState] = useState(0);
   const [isOnbordaVisible, setOnbordaVisible] = useState(false);
 
@@ -44,9 +45,11 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const closeOnborda = useCallback(() => {
     setOnbordaVisible(false);
+    setCurrentTour(null);
   }, []);
 
-  const startOnborda = useCallback(() => {
+  const startOnborda = useCallback((tourName: string) => {
+    setCurrentTour(tourName);
     setCurrentStepState(0);
     setOnbordaVisible(true);
   }, []);
@@ -54,6 +57,7 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <OnbordaContext.Provider
       value={{
+        currentTour,
         currentStep,
         setCurrentStep,
         closeOnborda,
