@@ -1,6 +1,6 @@
 {
   "name": "onborda",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "The ultimate product tour library for Next.js",
   "license": "MIT",
   "author": "Matt Litherland",
@@ -15,7 +15,11 @@
     "onboarding",
     "onborda",
     "wizard",
-    "react"
+    "react",
+    "product-tour",
+    "tour",
+    "demo",
+    "product-demo"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
