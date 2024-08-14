@@ -388,6 +388,6 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                                 width: pointerPosition.width + pointerPadding,
                                 height: pointerPosition.height + pointerPadding,
                             }
-                            : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col w-[400px] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }) }) }) }) }))] }));
+                            : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }) }) }) }) }))] }));
 };
 export default Onborda;

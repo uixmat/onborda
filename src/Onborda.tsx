@@ -483,7 +483,7 @@ const Onborda: React.FC<OnbordaProps> = ({
             >
               {/* Card */}
               <div
-                className="absolute flex flex-col w-[400px] transition-all min-w-min pointer-events-auto z-[999]"
+                className="absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]"
                 data-name="onborda-card"
                 style={getCardStyle(
                   currentTourSteps?.[currentStep]?.side as any

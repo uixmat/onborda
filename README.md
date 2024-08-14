@@ -80,6 +80,21 @@ export const CustomCard = ({
 }
 ```
 
+### Steps object
+Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" so you have the option to create multple product tours should you need to! The original Step format remains but with some additional content as shown in the example below!
+
+```tsx
+{
+  tour: "firstyour",
+  steps: [
+    Step
+  ],
+  tour: "secondtour",
+  steps: [
+    Step
+  ]
+}
+```
 
 ### Step object
 
@@ -101,32 +116,50 @@ export const CustomCard = ({
 ### Example `steps`
 
 ```tsx
-[
-  {
-    icon: <>👋</>,
-    title: "Step 1",
-    content: <>This is the first step</>,
-    selector: "#onborda-step1",
-    side: "top",
-    showControls: true,
-    pointerPadding: 10,
-    pointerRadius: 10,
-    nextRoute: "/foo",
-    prevRoute: "/bar"
-  }
-]
+{
+  tour: "firsttour",
+  steps: [
+    {
+      icon: <>👋</>,
+      title: "Tour 1, Step 1",
+      content: <>First tour, first step</>,
+      selector: "#tour1-step1",
+      side: "top",
+      showControls: true,
+      pointerPadding: 10,
+      pointerRadius: 10,
+      nextRoute: "/foo",
+      prevRoute: "/bar"
+    }
+    ...
+  ],
+  tour: "secondtour",
+  steps: [
+    icon: <>👋👋</>,
+      title: "Second tour, Step 1",
+      content: <>Second tour, first step!</>,
+      selector: "#onborda-step1",
+      side: "top",
+      showControls: true,
+      pointerPadding: 10,
+      pointerRadius: 10,
+      nextRoute: "/foo",
+      prevRoute: "/bar"
+  ]
+}
 ```
 
 ### Onborda Props
 
-| Property        | Type                       | Description                                                                           |
-|-----------------|----------------------------|---------------------------------------------------------------------------------------|
-| `children`      | `React.ReactNode`          | Your website or application content.                |
-| `steps`         | `Array[]`                   | An array of `Step` objects defining each step of the onboarding process.              |
-| `showOnborda`   | `boolean`                  | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                         |
-| `shadowRgb`     | `string`   | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |
-| `shadowOpacity` | `string`                   | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`          |
+| Property        | Type                  | Description                                                                           |
+|-----------------|-----------------------|---------------------------------------------------------------------------------------|
+| `children`      | `React.ReactNode`     | Your website or application content.                                                  |
+| `steps`         | `Array[]`             | An array of `Step` objects defining each step of the onboarding process.              |
+| `showOnborda`   | `boolean`             | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                         |
+| `shadowRgb`     | `string`              | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |
+| `shadowOpacity` | `string`              | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`          |
 | `customCard`    | `React.ReactNode`     | Optional. A custom card (or tooltip) that can be used to replace the default TailwindCSS card. |
+| `cardTransition`| `Transition`          | Transitions between steps are of the type Transition from [framer-motion](https://www.framer.com/motion/transition/), see the [transition docs](https://www.framer.com/motion/transition/) for more info. Example: `{{ type: "spring" }}`. |
 
 
 ```tsx
@@ -136,6 +169,7 @@ export const CustomCard = ({
   shadowRgb="55,48,163"
   shadowOpacity="0.8"
   cardComponent={CustomCard}
+  cardTransition={{ duration: 2, type: "tween" }}
 >
   {children}
 </Onborda>
