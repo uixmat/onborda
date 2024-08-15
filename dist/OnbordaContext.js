@@ -17,6 +17,7 @@ const useOnborda = () => {
     return context;
 };
 const OnbordaProvider = ({ children, }) => {
+    const [currentTour, setCurrentTour] = useState(null);
     const [currentStep, setCurrentStepState] = useState(0);
     const [isOnbordaVisible, setOnbordaVisible] = useState(false);
     const setCurrentStep = useCallback((step, delay) => {
@@ -33,12 +34,15 @@ const OnbordaProvider = ({ children, }) => {
     }, []);
     const closeOnborda = useCallback(() => {
         setOnbordaVisible(false);
+        setCurrentTour(null);
     }, []);
-    const startOnborda = useCallback(() => {
+    const startOnborda = useCallback((tourName) => {
+        setCurrentTour(tourName);
         setCurrentStepState(0);
         setOnbordaVisible(true);
     }, []);
     return (_jsx(OnbordaContext.Provider, { value: {
+            currentTour,
             currentStep,
             setCurrentStep,
             closeOnborda,

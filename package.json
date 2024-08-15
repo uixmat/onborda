@@ -1,7 +1,7 @@
 {
   "name": "onborda",
-  "version": "1.2.2",
-  "description": "An onboarding wizard for Next.js",
+  "version": "1.2.4",
+  "description": "The ultimate product tour library for Next.js",
   "license": "MIT",
   "author": "Matt Litherland",
   "homepage": "https://github.com/uixmat/onborda#readme",
@@ -15,7 +15,11 @@
     "onboarding",
     "onborda",
     "wizard",
-    "react"
+    "react",
+    "product-tour",
+    "tour",
+    "demo",
+    "product-demo"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,9 +29,10 @@
   },
   "peerDependencies": {
     "framer-motion": ">=11",
-    "react-dom": ">=18",
+    "next": ">=13",
     "react": ">=18",
-    "next": ">=13"
+    "react-dom": ">=18",
+    "@radix-ui/react-portal": ">=1.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.63",

@@ -1,9 +1,12 @@
+import { Transition } from "framer-motion";
+
 // Context
 export interface OnbordaContextType {
   currentStep: number;
+  currentTour: string | null;
   setCurrentStep: (step: number, delay?: number) => void;
   closeOnborda: () => void;
-  startOnborda: () => void;
+  startOnborda: (tourName: string) => void;
   isOnbordaVisible: boolean;
 }
 
@@ -15,7 +18,7 @@ export interface Step {
   content: React.ReactNode;
   selector: string;
   // Options
-  side?: "top" | "bottom" | "left" | "right";
+  side?: "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left-top" | "left-bottom" | "right-top" | "right-bottom";
   showControls?: boolean;
   pointerPadding?: number;
   pointerRadius?: number;
@@ -24,13 +27,21 @@ export interface Step {
   prevRoute?: string;
 }
 
+// Tour
+// 
+export interface Tour {
+  tour: string;
+  steps: Step[];
+}
+
 // Onborda
 export interface OnbordaProps {
   children: React.ReactNode;
-  steps: Step[];
+  steps: Tour[];
   showOnborda?: boolean;
   shadowRgb?: string;
   shadowOpacity?: string;
+  cardTransition?: Transition;
   cardComponent?: React.ComponentType<CardComponentProps>;
 }
 
