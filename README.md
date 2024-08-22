@@ -135,6 +135,7 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
   ],
   tour: "secondtour",
   steps: [
+    {
     icon: <>👋👋</>,
       title: "Second tour, Step 1",
       content: <>Second tour, first step!</>,
@@ -145,6 +146,7 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
       pointerRadius: 10,
       nextRoute: "/foo",
       prevRoute: "/bar"
+    }
   ]
 }
 ```
