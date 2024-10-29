@@ -515,7 +515,7 @@ const Onborda: React.FC<OnbordaProps> = ({
           </Portal>
       )}
 
-      <div data-name={'onborda-tour-wrapper'} className={'absolute top-0 left-0 z-[999] w-full h-full pointer-events-none'}>
+      <div data-name={'onborda-tour-wrapper'} className={'fixed top-0 left-0 z-[999] w-screen h-screen pointer-events-none'}>
           {TourComponent && currentTourSteps && (
               <div data-name={'onborda-tour'} className={'pointer-events-auto'}>
                   <TourComponent steps={currentTourSteps} currentTour={currentTour} currentStep={currentStep}/>
