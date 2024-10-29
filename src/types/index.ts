@@ -43,6 +43,7 @@ export interface OnbordaProps {
   shadowOpacity?: string;
   cardTransition?: Transition;
   cardComponent?: React.ComponentType<CardComponentProps>;
+  tourComponent?: React.ComponentType<TourComponentProps>;
 }
 
 // Custom Card
@@ -53,4 +54,11 @@ export interface CardComponentProps {
   nextStep: () => void;
   prevStep: () => void;
   arrow: JSX.Element;
+}
+
+// Tour Component
+export interface TourComponentProps {
+  currentTour: string | null;
+  currentStep: number;
+  steps: Step[];
 }

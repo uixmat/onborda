@@ -1,11 +1,11 @@
 "use client";
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion, useInView } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Portal } from "@radix-ui/react-portal";
-const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, }) => {
+const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, tourComponent: TourComponent, }) => {
     const { currentTour, currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
     const currentTourSteps = steps.find((tour) => tour.tour === currentTour)?.steps;
     const [elementToScroll, setElementToScroll] = useState(null);
@@ -371,23 +371,23 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
     const pointerPadding = currentTourSteps?.[currentStep]?.pointerPadding ?? 30;
     const pointerPadOffset = pointerPadding / 2;
     const pointerRadius = currentTourSteps?.[currentStep]?.pointerRadius ?? 28;
-    return (_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", "data-onborda": "dev", children: [_jsx("div", { "data-name": "onborda-site", className: "block w-full", children: children }), pointerPosition && isOnbordaVisible && CardComponent && (_jsx(Portal, { children: _jsx(motion.div, { "data-name": "onborda-overlay", className: "absolute inset-0 ", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[999]", style: {
-                            boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
-                            borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
-                        }, initial: pointerPosition
-                            ? {
-                                x: pointerPosition.x - pointerPadOffset,
-                                y: pointerPosition.y - pointerPadOffset,
-                                width: pointerPosition.width + pointerPadding,
-                                height: pointerPosition.height + pointerPadding,
-                            }
-                            : {}, animate: pointerPosition
-                            ? {
-                                x: pointerPosition.x - pointerPadOffset,
-                                y: pointerPosition.y - pointerPadOffset,
-                                width: pointerPosition.width + pointerPadding,
-                                height: pointerPosition.height + pointerPadding,
-                            }
-                            : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }) }) }) }) }))] }));
+    return (_jsxs(_Fragment, { children: [_jsxs("div", { "data-name": "onborda-wrapper", className: "relative w-full", "data-onborda": "dev", children: [_jsx("div", { "data-name": "onborda-site", className: "block w-full", children: children }), pointerPosition && isOnbordaVisible && CardComponent && (_jsx(Portal, { children: _jsx(motion.div, { "data-name": "onborda-overlay", className: "absolute inset-0 ", initial: "hidden", animate: isOnbordaVisible ? "visible" : "hidden", variants: variants, transition: { duration: 0.5 }, children: _jsx(motion.div, { "data-name": "onborda-pointer", className: "relative z-[998]", style: {
+                                    boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
+                                    borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
+                                }, initial: pointerPosition
+                                    ? {
+                                        x: pointerPosition.x - pointerPadOffset,
+                                        y: pointerPosition.y - pointerPadOffset,
+                                        width: pointerPosition.width + pointerPadding,
+                                        height: pointerPosition.height + pointerPadding,
+                                    }
+                                    : {}, animate: pointerPosition
+                                    ? {
+                                        x: pointerPosition.x - pointerPadOffset,
+                                        y: pointerPosition.y - pointerPadOffset,
+                                        width: pointerPosition.width + pointerPadding,
+                                        height: pointerPosition.height + pointerPadding,
+                                    }
+                                    : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }) }) }) }) }))] }), _jsx("div", { "data-name": 'onborda-tour-wrapper', className: 'absolute top-0 left-0 z-[999] w-full h-full pointer-events-none', children: TourComponent && currentTourSteps && (_jsx("div", { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) })) })] }));
 };
 export default Onborda;

@@ -15,6 +15,7 @@ const Onborda: React.FC<OnbordaProps> = ({
   shadowOpacity = "0.2",
   cardTransition = { ease: "anticipate", duration: 0.6 },
   cardComponent: CardComponent,
+  tourComponent: TourComponent,
 }) => {
   const { currentTour, currentStep, setCurrentStep, isOnbordaVisible } =
     useOnborda();
@@ -430,79 +431,87 @@ const Onborda: React.FC<OnbordaProps> = ({
   const pointerPadOffset = pointerPadding / 2;
   const pointerRadius = currentTourSteps?.[currentStep]?.pointerRadius ?? 28;
 
-  return (
-    <div
-      data-name="onborda-wrapper"
-      className="relative w-full"
-      data-onborda="dev"
-    >
-      {/* Container for the Website content */}
-      <div data-name="onborda-site" className="block w-full">
-        {children}
-      </div>
-
-      {/* Onborda Overlay Step Content */}
-      {pointerPosition && isOnbordaVisible && CardComponent && (
-        <Portal>
-          <motion.div
-            data-name="onborda-overlay"
-            className="absolute inset-0 "
-            initial="hidden"
-            animate={isOnbordaVisible ? "visible" : "hidden"}
-            variants={variants}
-            transition={{ duration: 0.5 }}
+  return (<>
+          <div
+              data-name="onborda-wrapper"
+              className="relative w-full"
+              data-onborda="dev"
           >
-            <motion.div
-              data-name="onborda-pointer"
-              className="relative z-[999]"
-              style={{
-                boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
-                borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
-              }}
-              initial={
-                pointerPosition
-                  ? {
-                      x: pointerPosition.x - pointerPadOffset,
-                      y: pointerPosition.y - pointerPadOffset,
-                      width: pointerPosition.width + pointerPadding,
-                      height: pointerPosition.height + pointerPadding,
-                    }
-                  : {}
-              }
-              animate={
-                pointerPosition
-                  ? {
-                      x: pointerPosition.x - pointerPadOffset,
-                      y: pointerPosition.y - pointerPadOffset,
-                      width: pointerPosition.width + pointerPadding,
-                      height: pointerPosition.height + pointerPadding,
-                    }
-                  : {}
-              }
-              transition={cardTransition}
-            >
-              {/* Card */}
-              <div
-                className="absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]"
-                data-name="onborda-card"
-                style={getCardStyle(
-                  currentTourSteps?.[currentStep]?.side as any
-                )}
-              >
-                <CardComponent
-                  step={currentTourSteps?.[currentStep]!}
-                  currentStep={currentStep}
-                  totalSteps={currentTourSteps?.length ?? 0}
-                  nextStep={nextStep}
-                  prevStep={prevStep}
-                  arrow={<CardArrow />}
-                />
+              {/* Container for the Website content */}
+              <div data-name="onborda-site" className="block w-full">
+                  {children}
               </div>
-            </motion.div>
-          </motion.div>
-        </Portal>
-      )}
-    </div>
+
+              {/* Onborda Overlay Step Content */}
+              {pointerPosition && isOnbordaVisible && CardComponent && (
+                  <Portal>
+                      <motion.div
+                          data-name="onborda-overlay"
+                          className="absolute inset-0 "
+                          initial="hidden"
+                          animate={isOnbordaVisible ? "visible" : "hidden"}
+                          variants={variants}
+                          transition={{duration: 0.5}}
+                      >
+                          <motion.div
+                              data-name="onborda-pointer"
+                              className="relative z-[998]"
+                              style={{
+                                  boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
+                                  borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
+                              }}
+                              initial={
+                                  pointerPosition
+                                      ? {
+                                          x: pointerPosition.x - pointerPadOffset,
+                                          y: pointerPosition.y - pointerPadOffset,
+                                          width: pointerPosition.width + pointerPadding,
+                                          height: pointerPosition.height + pointerPadding,
+                                      }
+                                      : {}
+                              }
+                              animate={
+                                  pointerPosition
+                                      ? {
+                                          x: pointerPosition.x - pointerPadOffset,
+                                          y: pointerPosition.y - pointerPadOffset,
+                                          width: pointerPosition.width + pointerPadding,
+                                          height: pointerPosition.height + pointerPadding,
+                                      }
+                                      : {}
+                              }
+                              transition={cardTransition}
+                          >
+                              {/* Card */}
+                              <div
+                                  className="absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]"
+                                  data-name="onborda-card"
+                                  style={getCardStyle(
+                                      currentTourSteps?.[currentStep]?.side as any
+                                  )}
+                              >
+                                  <CardComponent
+                                      step={currentTourSteps?.[currentStep]!}
+                                      currentStep={currentStep}
+                                      totalSteps={currentTourSteps?.length ?? 0}
+                                      nextStep={nextStep}
+                                      prevStep={prevStep}
+                                      arrow={<CardArrow/>}
+                                  />
+                              </div>
+                          </motion.div>
+                      </motion.div>
+                  </Portal>
+              )}
+          </div>
+          <div data-name={'onborda-tour-wrapper'} className={'absolute top-0 left-0 z-[999] w-full h-full pointer-events-none'}>
+              {TourComponent && currentTourSteps && (
+                  <div data-name={'onborda-tour'} className={'pointer-events-auto'}>
+                      <TourComponent steps={currentTourSteps} currentTour={currentTour} currentStep={currentStep}/>
+                  </div>
+              )}
+          </div>
+      </>
   );
 };
 

@@ -1,4 +1,3 @@
-/// <reference types="react" />
 import { Transition } from "framer-motion";
 export interface OnbordaContextType {
     currentStep: number;
@@ -32,6 +31,7 @@ export interface OnbordaProps {
     shadowOpacity?: string;
     cardTransition?: Transition;
     cardComponent?: React.ComponentType<CardComponentProps>;
+    tourComponent?: React.ComponentType<TourComponentProps>;
 }
 export interface CardComponentProps {
     step: Step;
@@ -40,4 +40,9 @@ export interface CardComponentProps {
     nextStep: () => void;
     prevStep: () => void;
     arrow: JSX.Element;
+}
+export interface TourComponentProps {
+    currentTour: string | null;
+    currentStep: number;
+    steps: Step[];
 }
