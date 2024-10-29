@@ -16,6 +16,7 @@ export interface Step {
     showControls?: boolean;
     pointerPadding?: number;
     pointerRadius?: number;
+    interactable?: boolean;
     nextRoute?: string;
     prevRoute?: string;
 }
