@@ -8,11 +8,11 @@ Onborda is a lightweight onboarding flow that utilises [framer-motion](https://w
 ## Getting started
 ```bash
 # npm
-npm i onborda
+npm i alexc-harrap/onborda
 # pnpm
-pnpm add onborda
+pnpm add alexc-harrap/onborda
 # yarn
-yarn add onborda
+yarn add alexc-harrap/onborda
 ```
 
 ### Global `layout.tsx`
@@ -173,4 +173,44 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
 >
   {children}
 </Onborda>
+```
+### Contribution
+To setup the project locally, clone the repository and run the following commands:
+```bash
+# Install dependencies
+npm install
+```
+
+To test the local library in a local Next.js project, run the following command in this project to setup npm link
+```bash
+# Create a symlink to the package
+npm link
+```
+
+Then in your Next.js project run the following command to link the package
+```bash
+# Link the package
+npm link onborda
+```
+
+To unlink the package, run the following command in your Next.js project
+```bash
+# Unlink the package
+npm unlink onborda
+```
+
+If you already have the published package installed in your project, the symlink will take precedence over the published package. Ensure to push changes to this repo before pushing changes to your project.
+
+Now you can make changes to the package and see them reflected in your Next.js project. The package must be build after every change to see the changes in your Next.js project.
+```bash
+# Build the package
+npm run build
+```
+
+To save rebuilding the package after every change, you can run the following command in this project to watch for changes and rebuild the package, which will in turn update the symlink in your Next.js project.
+```bash
+# Watch for changes and rebuild the package
+npm run dev
+# Cancel the watch process
+^c
 ```
