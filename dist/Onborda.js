@@ -1,6 +1,6 @@
 "use client";
 import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion, useInView } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -24,21 +24,35 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
             console.log("Onborda: Current Step Changed");
             const step = currentTourSteps[currentStep];
             if (step) {
-                const element = document.querySelector(step.selector);
-                if (element) {
-                    setPointerPosition(getElementPosition(element));
-                    currentElementRef.current = element;
-                    // Enable pointer events on the element
-                    if (step.interactable) {
-                        const htmlElement = element;
-                        htmlElement.style.pointerEvents = "auto";
+                const selector = step.selector;
+                if (selector) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        setPointerPosition(getElementPosition(element));
+                        currentElementRef.current = element;
+                        // Enable pointer events on the element
+                        if (step.interactable) {
+                            const htmlElement = element;
+                            htmlElement.style.pointerEvents = "auto";
+                        }
+                        setElementToScroll(element);
+                        const rect = element.getBoundingClientRect();
+                        const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
+                        if (!isInView || !isInViewportWithOffset) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
                     }
-                    setElementToScroll(element);
-                    const rect = element.getBoundingClientRect();
-                    const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
-                    if (!isInView || !isInViewportWithOffset) {
-                        element.scrollIntoView({ behavior: "smooth", block: "center" });
-                    }
+                }
+                else {
+                    // if the element is not found, place the pointer at the center of the screen
+                    setPointerPosition({
+                        x: window.innerWidth / 2,
+                        y: window.innerHeight / 2,
+                        width: 0,
+                        height: 0,
+                    });
+                    setElementToScroll(null);
+                    currentElementRef.current = null;
                 }
             }
         }
@@ -67,19 +81,33 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
     // Update pointerPosition when currentStep changes
     useEffect(() => {
         if (isOnbordaVisible && currentTourSteps) {
-            console.log("Onborda: Current Step Changed");
             const step = currentTourSteps[currentStep];
+            console.log("Onborda: Current Step Changed", step);
             if (step) {
-                const element = document.querySelector(step.selector);
-                if (element) {
-                    setPointerPosition(getElementPosition(element));
-                    currentElementRef.current = element;
-                    setElementToScroll(element);
-                    const rect = element.getBoundingClientRect();
-                    const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
-                    if (!isInView || !isInViewportWithOffset) {
-                        element.scrollIntoView({ behavior: "smooth", block: "center" });
+                const selector = step.selector;
+                if (selector) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        setPointerPosition(getElementPosition(element));
+                        currentElementRef.current = element;
+                        setElementToScroll(element);
+                        const rect = element.getBoundingClientRect();
+                        const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
+                        if (!isInView || !isInViewportWithOffset) {
+                            element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
                     }
+                }
+                else {
+                    // if the element is not found, place the pointer at the center of the screen
+                    setPointerPosition({
+                        x: window.innerWidth / 2,
+                        y: window.innerHeight / 2,
+                        width: 0,
+                        height: 0,
+                    });
+                    setElementToScroll(null);
+                    currentElementRef.current = null;
                 }
             }
         }
@@ -102,9 +130,23 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
         if (currentTourSteps) {
             const step = currentTourSteps[currentStep];
             if (step) {
-                const element = document.querySelector(step.selector);
-                if (element) {
-                    setPointerPosition(getElementPosition(element));
+                const selector = step.selector;
+                if (selector) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        setPointerPosition(getElementPosition(element));
+                    }
+                }
+                else {
+                    // if the element is not found, place the pointer at the center of the screen
+                    setPointerPosition({
+                        x: window.innerWidth / 2,
+                        y: window.innerHeight / 2,
+                        width: 0,
+                        height: 0,
+                    });
+                    setElementToScroll(null);
+                    currentElementRef.current = null;
                 }
             }
         }
@@ -127,22 +169,28 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                 if (route) {
                     await router.push(route);
                     const targetSelector = currentTourSteps[nextStepIndex].selector;
-                    // Use MutationObserver to detect when the target element is available in the DOM
-                    const observer = new MutationObserver((mutations, observer) => {
-                        const element = document.querySelector(targetSelector);
-                        if (element) {
-                            // Once the element is found, update the step and scroll to the element
-                            setCurrentStep(nextStepIndex);
-                            scrollToElement(nextStepIndex);
-                            // Stop observing after the element is found
-                            observer.disconnect();
-                        }
-                    });
-                    // Start observing the document body for changes
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true,
-                    });
+                    if (targetSelector) {
+                        // Use MutationObserver to detect when the target element is available in the DOM
+                        const observer = new MutationObserver((mutations, observer) => {
+                            const element = document.querySelector(targetSelector);
+                            if (element) {
+                                // Once the element is found, update the step and scroll to the element
+                                setCurrentStep(nextStepIndex);
+                                scrollToElement(nextStepIndex);
+                                // Stop observing after the element is found
+                                observer.disconnect();
+                            }
+                        });
+                        // Start observing the document body for changes
+                        observer.observe(document.body, {
+                            childList: true,
+                            subtree: true,
+                        });
+                    }
+                    else {
+                        // If no selector is provided, just update the step
+                        setCurrentStep(nextStepIndex);
+                    }
                 }
                 else {
                     setCurrentStep(nextStepIndex);
@@ -162,22 +210,28 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                 if (route) {
                     await router.push(route);
                     const targetSelector = currentTourSteps[prevStepIndex].selector;
-                    // Use MutationObserver to detect when the target element is available in the DOM
-                    const observer = new MutationObserver((mutations, observer) => {
-                        const element = document.querySelector(targetSelector);
-                        if (element) {
-                            // Once the element is found, update the step and scroll to the element
-                            setCurrentStep(prevStepIndex);
-                            scrollToElement(prevStepIndex);
-                            // Stop observing after the element is found
-                            observer.disconnect();
-                        }
-                    });
-                    // Start observing the document body for changes
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true,
-                    });
+                    if (targetSelector) {
+                        // Use MutationObserver to detect when the target element is available in the DOM
+                        const observer = new MutationObserver((mutations, observer) => {
+                            const element = document.querySelector(targetSelector);
+                            if (element) {
+                                // Once the element is found, update the step and scroll to the element
+                                setCurrentStep(prevStepIndex);
+                                scrollToElement(prevStepIndex);
+                                // Stop observing after the element is found
+                                observer.disconnect();
+                            }
+                        });
+                        // Start observing the document body for changes
+                        observer.observe(document.body, {
+                            childList: true,
+                            subtree: true,
+                        });
+                    }
+                    else {
+                        // If no selector is provided, just update the step
+                        setCurrentStep(prevStepIndex);
+                    }
                 }
                 else {
                     setCurrentStep(prevStepIndex);
@@ -193,15 +247,29 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
     // Scroll to the correct element when the step changes
     const scrollToElement = (stepIndex) => {
         if (currentTourSteps) {
-            const element = document.querySelector(currentTourSteps[stepIndex].selector);
-            if (element) {
-                const { top } = element.getBoundingClientRect();
-                const isInViewport = top >= -offset && top <= window.innerHeight + offset;
-                if (!isInViewport) {
-                    element.scrollIntoView({ behavior: "smooth", block: "center" });
+            const selector = currentTourSteps[stepIndex].selector;
+            if (selector) {
+                const element = document.querySelector(selector);
+                if (element) {
+                    const { top } = element.getBoundingClientRect();
+                    const isInViewport = top >= -offset && top <= window.innerHeight + offset;
+                    if (!isInViewport) {
+                        element.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                    // Update pointer position after scrolling
+                    setPointerPosition(getElementPosition(element));
                 }
-                // Update pointer position after scrolling
-                setPointerPosition(getElementPosition(element));
+            }
+            else {
+                // if the element is not found, place the pointer at the center of the screen
+                setPointerPosition({
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    width: 0,
+                    height: 0,
+                });
+                setElementToScroll(null);
+                currentElementRef.current = null;
             }
         }
     };
@@ -284,7 +352,14 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                     marginRight: "25px",
                 };
             default:
-                return {}; // Default case if no side is specified
+                // Default case if no side is specified. Center the card to the screen
+                return {
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)', // Center the card
+                    position: 'fixed', // Make sure it's positioned relative to the viewport
+                    margin: '0',
+                };
         }
     };
     // - -
@@ -369,7 +444,10 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
     };
     // - -
     // Card Arrow
-    const CardArrow = () => {
+    const CardArrow = ({ isVisible }) => {
+        if (!isVisible) {
+            return null;
+        }
         return (_jsx("svg", { viewBox: "0 0 54 54", "data-name": "onborda-arrow", className: "absolute w-6 h-6 origin-center", style: getArrowStyle(currentTourSteps?.[currentStep]?.side), children: _jsx("path", { id: "triangle", d: "M27 27L0 0V54L27 27Z", fill: "currentColor" }) }));
     };
     // - -
@@ -401,6 +479,6 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                                 width: pointerPosition.width + pointerPadding,
                                 height: pointerPosition.height + pointerPadding,
                             }
-                            : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, {}) }) }) }) }) })), _jsx("div", { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[999] w-screen h-screen pointer-events-none', children: TourComponent && currentTourSteps && (_jsx("div", { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) })) })] }));
+                            : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, { isVisible: !!(currentTourSteps?.[currentStep]?.selector) }) }) }) }) }) })), _jsx("div", { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[999] w-screen h-screen pointer-events-none', children: TourComponent && currentTourSteps && (_jsx("div", { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) })) })] }));
 };
 export default Onborda;
