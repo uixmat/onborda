@@ -7,7 +7,6 @@ import {Portal} from "@radix-ui/react-portal";
 
 // Types
 import {OnbordaProps, Step} from "./types";
-import {step} from "next/dist/experimental/testmode/playwright/step";
 
 const Onborda: React.FC<OnbordaProps> = ({
     children,
@@ -17,9 +16,9 @@ const Onborda: React.FC<OnbordaProps> = ({
     cardTransition = {ease: "anticipate", duration: 0.6},
     cardComponent: CardComponent,
     tourComponent: TourComponent,
+    debug = false,
 }) => {
-    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible} =
-        useOnborda();
+    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible} = useOnborda();
     const currentTourSteps = steps.find(
         (tour) => tour.tour === currentTour
     )?.steps;
@@ -51,7 +50,7 @@ const Onborda: React.FC<OnbordaProps> = ({
     // Initialisze
     useEffect(() => {
         if (isOnbordaVisible && currentTourSteps) {
-            console.log("Onborda: Current Step Changed");
+            debug && console.log("Onborda: Current Step Changed");
             const step = currentTourSteps[currentStep];
             if (step) {
                 const element = getStepSelectorElement(step)
@@ -115,22 +114,20 @@ const Onborda: React.FC<OnbordaProps> = ({
     useEffect(() => {
         if (isOnbordaVisible && currentTourSteps) {
             const step = currentTourSteps[currentStep];
-            console.log("Onborda: Current Step Changed", step);
+            debug && console.log("Onborda: Current Step Changed", step);
             if (step) {
                 const element = getStepSelectorElement(step);
                 if (element) {
-                    if (element) {
-                        setPointerPosition(getElementPosition(element));
-                        currentElementRef.current = element;
-                        setElementToScroll(element);
+                    setPointerPosition(getElementPosition(element));
+                    currentElementRef.current = element;
+                    setElementToScroll(element);
 
-                        const rect = element.getBoundingClientRect();
-                        const isInViewportWithOffset =
-                            rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
+                    const rect = element.getBoundingClientRect();
+                    const isInViewportWithOffset =
+                        rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
 
-                        if (!isInView || !isInViewportWithOffset) {
-                            element.scrollIntoView({behavior: "smooth", block: "center"});
-                        }
+                    if (!isInView || !isInViewportWithOffset) {
+                        element.scrollIntoView({behavior: "smooth", block: "center"});
                     }
                 }else {
                     // if the element is not found, place the pointer at the center of the screen
@@ -143,13 +140,23 @@ const Onborda: React.FC<OnbordaProps> = ({
                     setElementToScroll(null);
                     currentElementRef.current = null;
                 }
+                // Prefetch the next route
+                if (step?.nextRoute) {
+                    debug && console.log("Onborda: Prefetching Next Route", step.nextRoute);
+                    router.prefetch(step.nextRoute);
+                }
+                // Prefetch the previous route
+                if (step?.prevRoute) {
+                    debug && console.log("Onborda: Prefetching Previous Route", step.prevRoute);
+                    router.prefetch(step.prevRoute);
+                }
             }
         }
     }, [currentStep, currentTourSteps, isInView, offset, isOnbordaVisible]);
 
     useEffect(() => {
         if (elementToScroll && !isInView && isOnbordaVisible) {
-            console.log("Onborda: Element to Scroll Changed");
+            debug && console.log("Onborda: Element to Scroll Changed");
             const rect = elementToScroll.getBoundingClientRect();
             const isAbove = rect.top < 0;
             elementToScroll.scrollIntoView({
@@ -204,17 +211,25 @@ const Onborda: React.FC<OnbordaProps> = ({
                 if (route) {
                     await router.push(route);
 
-                    const element = getStepSelectorElement(currentTourSteps[nextStepIndex]);
-                    if (element) {
+                    const shouldSelect = hasSelector(currentTourSteps[nextStepIndex]);
+                    if (shouldSelect) {
                         // Use MutationObserver to detect when the target element is available in the DOM
                         const observer = new MutationObserver((mutations, observer) => {
-                            if (element) {
+                            const nextStep = currentTourSteps?.[nextStepIndex];
+                            if (!nextStep) {
+                                debug && console.log("Onborda: Next Step not found while observing");
+                                observer.disconnect();
+                            }
+                            const elementFound = getStepSelectorElement(nextStep);
+                            if (elementFound) {
                                 // Once the element is found, update the step and scroll to the element
                                 setCurrentStep(nextStepIndex);
                                 scrollToElement(nextStepIndex);
 
                                 // Stop observing after the element is found
                                 observer.disconnect();
+                            }else {
+                                debug && console.log("Onborda: Element not found", currentTourSteps[nextStepIndex]);
                             }
                         });
 
@@ -246,10 +261,11 @@ const Onborda: React.FC<OnbordaProps> = ({
                 if (route) {
                     await router.push(route);
 
-                    const element = getStepSelectorElement(currentTourSteps[prevStepIndex]);
-                    if (element) {
+                    const shouldSelect = hasSelector(currentTourSteps[prevStepIndex]);
+                    if (shouldSelect) {
                         // Use MutationObserver to detect when the target element is available in the DOM
                         const observer = new MutationObserver((mutations, observer) => {
+                            const element = getStepSelectorElement(currentTourSteps[prevStepIndex]);
                             if (element) {
                                 // Once the element is found, update the step and scroll to the element
                                 setCurrentStep(prevStepIndex);
@@ -257,6 +273,8 @@ const Onborda: React.FC<OnbordaProps> = ({
 
                                 // Stop observing after the element is found
                                 observer.disconnect();
+                            }else {
+                                debug && console.log("Onborda: Element not found", currentTourSteps[prevStepIndex]);
                             }
                         });
 

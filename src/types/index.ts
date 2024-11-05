@@ -46,6 +46,7 @@ export interface OnbordaProps {
   cardTransition?: Transition;
   cardComponent?: React.ComponentType<CardComponentProps>;
   tourComponent?: React.ComponentType<TourComponentProps>;
+  debug?: boolean;
 }
 
 // Custom Card

@@ -25,7 +25,7 @@ yarn add Libresoft-UK/onborda
 ```
 
 ### Components & `page.tsx`
-Target anything in your app using the elements `id` attribute.
+Optionally target anything in your app using the elements `id` attribute to overlay a backdrop and highlight the target element. If no `selector` or `customQuerySelector` is provided, the overlay will cover the entire page and the step will display as a traditional modal.
 ```tsx
 <div id="onborda-step1">Onboard Step</div>
 ```
@@ -43,7 +43,7 @@ const config: Config = {
 }
 ```
 
-### Custom Card 
+### Card Component
 If you require greater control over the card design or simply wish to create a totally custom component then you can do so easily.
 
 | Prop          | Type             | Description                                                          |
@@ -80,6 +80,38 @@ export const CustomCard = ({
 }
 ```
 
+### Tour Component
+If you require greater control over the tour design or simply wish to create a totally custom component then you can do so easily.
+
+| Prop          | Type     | Description                                                          |
+|---------------|----------|----------------------------------------------------------------------|
+| `currentTour`  | `string` | The current tour name.                                               |
+| `currentStep`  | `number` | The index of the current step in the steps array.                    |
+| `steps`        | `Step[]` | The steps array for the current tour.                                |
+
+```tsx
+"use client"
+import type { TourComponentProps } from "onborda";
+
+export const CustomTour = ({
+  currentTour,
+  currentStep,
+  steps,
+}: TourComponentProps) => {
+  return (
+    <div>
+      <h1>{currentTour}</h1>
+      <h2>{currentStep} of {steps.length}</h2>
+      <ul>
+        {steps.map((step, index) => (
+          <li key={index}>{step.title}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
 ### Steps object
 Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" so you have the option to create multple product tours should you need to! The original Step format remains but with some additional content as shown in the example below!
 
@@ -98,20 +130,20 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
 
 ### Step object
 
-| Prop           | Type                          | Description                                                                           |
-|----------------|-------------------------------|---------------------------------------------------------------------------------------|
-| `icon`           | `React.ReactNode`, `string`, `null` | An icon or element to display alongside the step title.                                |
-| `title`          | `string`                        | The title of your step                     |
-| `content`        | `React.ReactNode`               | The main content or body of the step.                                                 |
-| `selector`       | `string`                        | A string used to target an `id` that this step refers to.            |
-| `side`           | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.          |
-| `showControls`   | `boolean`                       | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.           |
-| `pointerPadding` | `number`                        | Optional. The padding around the pointer (keyhole) highlighting the target element.             |
-| `pointerRadius`  | `number`                        | Optional. The border-radius of the pointer (keyhole) highlighting the target element.           |
-| `nextRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the next step.                      |
-| `prevRoute`      | `string`                        | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                  |
-
-> **Note** _Both `nextRoute` and `prevRoute` have a `500`ms delay before setting the next step, a function will be added soon to control the delay in case your application loads slower than this._
+| Prop                  | Type                                     | Description                                                                                                                                                                                 |
+|-----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `icon`                | `React.ReactNode`, `string`, `null`      | An icon or element to display alongside the step title.                                                                                                                                     |
+| `title`               | `string`                                 | The title of your step                                                                                                                                                                      |
+| `content`             | `React.ReactNode`                        | The main content or body of the step.                                                                                                                                                       |
+| `selector`            | `string`                                 | Optional. A string used to target an Element by `id` that this step refers to. Takes precedence over `customQuerySelector`.                                                                 |
+| `customQuerySelector` | `()=>Element \| null`                    | Optional. A client function that returns the element to target that this step refers to. Proceeded by `selector`. <br> Useful for targeting complex elements, like those from UI libraries. |
+| `side`                | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.                                                                                                              |
+| `showControls`        | `boolean`                                | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.                                                                                        |
+| `pointerPadding`      | `number`                                 | Optional. The padding around the pointer (keyhole) highlighting the target element.                                                                                                         |
+| `pointerRadius`       | `number`                                 | Optional. The border-radius of the pointer (keyhole) highlighting the target element.                                                                                                       |
+| `nextRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the next step.                                                                                                    |
+| `prevRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                                                                                                |
+| `interactable`        | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                 |
 
 ### Example `steps`
 
@@ -138,28 +170,32 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
     icon: <>👋👋</>,
       title: "Second tour, Step 1",
       content: <>Second tour, first step!</>,
-      selector: "#onborda-step1",
+      //selector: "#onborda-step1",
+      customQuerySelector: () => document.getElementById("onborda-step1").closest("div"), // get the parent div
       side: "top",
       showControls: true,
       pointerPadding: 10,
       pointerRadius: 10,
       nextRoute: "/foo",
-      prevRoute: "/bar"
+      prevRoute: "/bar", 
+      interactable: true 
   ]
 }
 ```
 
 ### Onborda Props
 
-| Property        | Type                  | Description                                                                           |
-|-----------------|-----------------------|---------------------------------------------------------------------------------------|
-| `children`      | `React.ReactNode`     | Your website or application content.                                                  |
-| `steps`         | `Array[]`             | An array of `Step` objects defining each step of the onboarding process.              |
-| `showOnborda`   | `boolean`             | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                         |
-| `shadowRgb`     | `string`              | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |
-| `shadowOpacity` | `string`              | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`          |
-| `customCard`    | `React.ReactNode`     | Optional. A custom card (or tooltip) that can be used to replace the default TailwindCSS card. |
-| `cardTransition`| `Transition`          | Transitions between steps are of the type Transition from [framer-motion](https://www.framer.com/motion/transition/), see the [transition docs](https://www.framer.com/motion/transition/) for more info. Example: `{{ type: "spring" }}`. |
+| Property         | Type              | Description                                                                                                                                                                                                                                |
+|------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `children`       | `React.ReactNode` | Your website or application content.                                                                                                                                                                                                       |
+| `steps`          | `Array[]`         | An array of `Step` objects defining each step of the onboarding process.                                                                                                                                                                   |
+| `showOnborda`    | `boolean`         | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                                                                                                                 |
+| `shadowRgb`      | `string`          | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.                                                                                                                                    |
+| `shadowOpacity`  | `string`          | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`                                                                                                                                                |
+| `cardTransition` | `Transition`      | Transitions between steps are of the type Transition from [framer-motion](https://www.framer.com/motion/transition/), see the [transition docs](https://www.framer.com/motion/transition/) for more info. Example: `{{ type: "spring" }}`. |
+| `cardComponent`  | `React.ReactNode` | The React component to use as the card for each step.                                                                                                                                                                                       |
+| `tourComponent`  | `React.ReactNode` | The React component to use as a list of steps for the current tour.                                                                                                                                                                        |
+| `debug`          | `boolean`         | Optional. Console logs the current step and the target element. Defaults to `false`.                                                                                                                                                       |
 
 
 ```tsx
@@ -169,6 +205,7 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
   shadowRgb="55,48,163"
   shadowOpacity="0.8"
   cardComponent={CustomCard}
+  tourComponent={CustomTour}
   cardTransition={{ duration: 2, type: "tween" }}
 >
   {children}
