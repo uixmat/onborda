@@ -17,6 +17,7 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
     const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
+    const [canProceed, setCanProceed] = useState(true);
     const offset = 20;
     const hasSelector = (step) => {
         return !!step?.selector || !!step?.customQuerySelector;
@@ -71,6 +72,31 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
             }
         };
     }, [currentStep, currentTourSteps, offset, isOnbordaVisible]);
+    // Update the canProceed state based on the nextStepConditions
+    useEffect(() => {
+        const step = currentTourSteps?.[currentStep];
+        const element = step ? getStepSelectorElement(step) : null;
+        if (element && step?.nextStepConditions) {
+            const handleInteraction = () => {
+                const canProceed = step?.nextStepConditions?.(element) ?? true;
+                setCanProceed(canProceed);
+            };
+            // Initial check
+            handleInteraction();
+            element.addEventListener("click", handleInteraction);
+            element.addEventListener("input", handleInteraction);
+            element.addEventListener("change", handleInteraction);
+            return () => {
+                // Cleanup the event listeners
+                element.removeEventListener("click", handleInteraction);
+                element.removeEventListener("input", handleInteraction);
+                element.removeEventListener("change", handleInteraction);
+            };
+        }
+        else {
+            setCanProceed(true);
+        }
+    }, [currentStep, currentTourSteps]);
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {
@@ -282,6 +308,6 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                                     width: pointerPosition.width + pointerPadding,
                                     height: pointerPosition.height + pointerPadding,
                                 }
-                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }) }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) }) }))] }))] }));
+                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), canProceed: canProceed }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) }) }))] }))] }));
 };
 export default Onborda;

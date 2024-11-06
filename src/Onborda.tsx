@@ -38,6 +38,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         height: number;
     } | null>(null);
     const currentElementRef = useRef<Element | null>(null);
+    const [canProceed, setCanProceed] = useState(true);
     const offset = 20;
 
     const hasSelector = (step: Step): boolean => {
@@ -70,7 +71,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                         htmlElement.style.pointerEvents = "auto";
                     }
 
-                }else {
+                } else {
                     // if the element is not found, place the pointer at the center of the screen
                     setPointerPosition({
                         x: window.innerWidth / 2,
@@ -96,6 +97,34 @@ const Onborda: React.FC<OnbordaProps> = ({
             }
         }
     }, [currentStep, currentTourSteps, offset, isOnbordaVisible]);
+
+    // Update the canProceed state based on the nextStepConditions
+    useEffect(() => {
+        const step = currentTourSteps?.[currentStep];
+        const element = step ? getStepSelectorElement(step) : null;
+
+        if (element && step?.nextStepConditions) {
+            const handleInteraction = () => {
+                const canProceed = step?.nextStepConditions?.(element) ?? true;
+                setCanProceed(canProceed);
+            };
+            // Initial check
+            handleInteraction();
+
+            element.addEventListener("click", handleInteraction);
+            element.addEventListener("input", handleInteraction);
+            element.addEventListener("change", handleInteraction);
+
+            return () => {
+                // Cleanup the event listeners
+                element.removeEventListener("click", handleInteraction);
+                element.removeEventListener("input", handleInteraction);
+                element.removeEventListener("change", handleInteraction);
+            };
+        }else {
+            setCanProceed(true);
+        }
+    }, [currentStep, currentTourSteps]);
 
     // - -
     // Helper function to get element position
@@ -188,7 +217,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                             } else {
                                 debug && console.log("Onborda: Observing for element...", currentTourSteps[nextStepIndex]);
                             }
-                        }else {
+                        } else {
                             console.log("Onborda: No selector set for next step while observing", currentTourSteps[nextStepIndex]);
                             setCurrentStep(nextStepIndex);
                             observer.disconnect();
@@ -250,7 +279,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 // Continue observing until the element is found
                                 debug && console.log("Onborda: Observing for element...", currentTourSteps[prevStepIndex]);
                             }
-                        }else {
+                        } else {
                             debug && console.log("Onborda: No selector set for previous step while observing", currentTourSteps[prevStepIndex]);
                             setCurrentStep(prevStepIndex);
                             observer.disconnect();
@@ -289,7 +318,7 @@ const Onborda: React.FC<OnbordaProps> = ({
 
     // - -
     // Card Arrow
-    const CardArrow = ({ isVisible }: { isVisible: boolean }) => {
+    const CardArrow = ({isVisible}: { isVisible: boolean }) => {
         if (!isVisible) {
             return null;
         }
@@ -390,9 +419,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 totalSteps={currentTourSteps?.length ?? 0}
                                 nextStep={nextStep}
                                 prevStep={prevStep}
-                                arrow={<CardArrow
-                                    isVisible={currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false}
-                                />}
+                                arrow={<CardArrow isVisible={currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false}/>}
+                                canProceed={canProceed}
                             />
                         </div>
                     </motion.div>
