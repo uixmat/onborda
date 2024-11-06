@@ -35,6 +35,7 @@ export interface OnbordaProps {
     cardComponent?: React.ComponentType<CardComponentProps>;
     tourComponent?: React.ComponentType<TourComponentProps>;
     debug?: boolean;
+    observerTimeout?: number;
 }
 export interface CardComponentProps {
     step: Step;

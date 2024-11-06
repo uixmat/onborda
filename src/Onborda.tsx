@@ -1,13 +1,19 @@
 "use client";
 import React, {useEffect, useRef, useState} from "react";
 import {useOnborda} from "./OnbordaContext";
-import {motion, useInView} from "framer-motion";
+import {motion} from "framer-motion";
 import {useRouter} from "next/navigation";
 import {Portal} from "@radix-ui/react-portal";
 
 // Types
 import {OnbordaProps, Step} from "./types";
+import {getCardStyle, getArrowStyle} from "./OnbordaStyles";
 
+/**
+ * Onborda Component
+ * @param {OnbordaProps} props
+ * @constructor
+ */
 const Onborda: React.FC<OnbordaProps> = ({
     children,
     steps,
@@ -17,7 +23,8 @@ const Onborda: React.FC<OnbordaProps> = ({
     cardComponent: CardComponent,
     tourComponent: TourComponent,
     debug = false,
-}) => {
+    observerTimeout = 5000,
+}: OnbordaProps) => {
     const {currentTour, currentStep, setCurrentStep, isOnbordaVisible} = useOnborda();
     const currentTourSteps = steps.find(
         (tour) => tour.tour === currentTour
@@ -31,8 +38,6 @@ const Onborda: React.FC<OnbordaProps> = ({
         height: number;
     } | null>(null);
     const currentElementRef = useRef<Element | null>(null);
-    const observeRef = useRef(null); // Ref for the observer element
-    const isInView = useInView(observeRef);
     const offset = 20;
 
     const hasSelector = (step: Step): boolean => {
@@ -56,6 +61,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const element = getStepSelectorElement(step)
                 if (element) {
                     setPointerPosition(getElementPosition(element));
+                    setElementToScroll(element);
                     currentElementRef.current = element;
 
                     // Enable pointer events on the element
@@ -64,71 +70,6 @@ const Onborda: React.FC<OnbordaProps> = ({
                         htmlElement.style.pointerEvents = "auto";
                     }
 
-                    setElementToScroll(element);
-
-                    const rect = element.getBoundingClientRect();
-                    const isInViewportWithOffset =
-                        rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
-
-                    if (!isInView || !isInViewportWithOffset) {
-                        element.scrollIntoView({behavior: "smooth", block: "center"});
-                    }
-                }else {
-                    // if the element is not found, place the pointer at the center of the screen
-                    setPointerPosition({
-                        x: window.innerWidth / 2,
-                        y: window.innerHeight / 2,
-                        width: 0,
-                        height: 0,
-                    });
-                    setElementToScroll(null);
-                    currentElementRef.current = null;
-                }
-            }
-        }
-        return () => {
-            // Disable pointer events on the element on cleanup
-            if (currentElementRef.current) {
-                const htmlElement = currentElementRef.current as HTMLElement;
-                htmlElement.style.pointerEvents = "";
-            }
-        }
-    }, [currentStep, currentTourSteps, isInView, offset, isOnbordaVisible]);
-
-    // - -
-    // Helper function to get element position
-    const getElementPosition = (element: Element) => {
-        const {top, left, width, height} = element.getBoundingClientRect();
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-        return {
-            x: left + scrollLeft,
-            y: top + scrollTop,
-            width,
-            height,
-        };
-    };
-
-    // - -
-    // Update pointerPosition when currentStep changes
-    useEffect(() => {
-        if (isOnbordaVisible && currentTourSteps) {
-            const step = currentTourSteps[currentStep];
-            debug && console.log("Onborda: Current Step Changed", step);
-            if (step) {
-                const element = getStepSelectorElement(step);
-                if (element) {
-                    setPointerPosition(getElementPosition(element));
-                    currentElementRef.current = element;
-                    setElementToScroll(element);
-
-                    const rect = element.getBoundingClientRect();
-                    const isInViewportWithOffset =
-                        rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
-
-                    if (!isInView || !isInViewportWithOffset) {
-                        element.scrollIntoView({behavior: "smooth", block: "center"});
-                    }
                 }else {
                     // if the element is not found, place the pointer at the center of the screen
                     setPointerPosition({
@@ -145,17 +86,35 @@ const Onborda: React.FC<OnbordaProps> = ({
                     debug && console.log("Onborda: Prefetching Next Route", step.nextRoute);
                     router.prefetch(step.nextRoute);
                 }
-                // Prefetch the previous route
-                if (step?.prevRoute) {
-                    debug && console.log("Onborda: Prefetching Previous Route", step.prevRoute);
-                    router.prefetch(step.prevRoute);
-                }
             }
         }
-    }, [currentStep, currentTourSteps, isInView, offset, isOnbordaVisible]);
+        return () => {
+            // Disable pointer events on the element on cleanup
+            if (currentElementRef.current) {
+                const htmlElement = currentElementRef.current as HTMLElement;
+                htmlElement.style.pointerEvents = "";
+            }
+        }
+    }, [currentStep, currentTourSteps, offset, isOnbordaVisible]);
 
+    // - -
+    // Helper function to get element position
+    const getElementPosition = (element: Element) => {
+        const {top, left, width, height} = element.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+        return {
+            x: left + scrollLeft,
+            y: top + scrollTop,
+            width,
+            height,
+        };
+    };
+
+    // - -
+    // Scroll to the element when the elementToScroll changes
     useEffect(() => {
-        if (elementToScroll && !isInView && isOnbordaVisible) {
+        if (elementToScroll && isOnbordaVisible) {
             debug && console.log("Onborda: Element to Scroll Changed");
             const rect = elementToScroll.getBoundingClientRect();
             const isAbove = rect.top < 0;
@@ -165,7 +124,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                 inline: "center",
             });
         }
-    }, [elementToScroll, isInView, isOnbordaVisible]);
+    }, [elementToScroll, isOnbordaVisible]);
 
     // - -
     // Update pointer position on window resize
@@ -208,43 +167,56 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const nextStepIndex = currentStep + 1;
                 const route = currentTourSteps[currentStep].nextRoute;
 
+
                 if (route) {
+
+                    // Trigger the next route
                     await router.push(route);
 
-                    const shouldSelect = hasSelector(currentTourSteps[nextStepIndex]);
-                    if (shouldSelect) {
-                        // Use MutationObserver to detect when the target element is available in the DOM
-                        const observer = new MutationObserver((mutations, observer) => {
-                            const nextStep = currentTourSteps?.[nextStepIndex];
-                            if (!nextStep) {
-                                debug && console.log("Onborda: Next Step not found while observing");
-                                observer.disconnect();
-                            }
-                            const elementFound = getStepSelectorElement(nextStep);
-                            if (elementFound) {
+
+                    // Use MutationObserver to detect when the target element is available in the DOM
+                    const observer = new MutationObserver((mutations, observer) => {
+                        const shouldSelect = hasSelector(currentTourSteps[nextStepIndex]);
+                        if (shouldSelect) {
+                            const element = getStepSelectorElement(currentTourSteps[nextStepIndex]);
+                            if (element) {
                                 // Once the element is found, update the step and scroll to the element
                                 setCurrentStep(nextStepIndex);
-                                scrollToElement(nextStepIndex);
 
                                 // Stop observing after the element is found
                                 observer.disconnect();
-                            }else {
-                                debug && console.log("Onborda: Element not found", currentTourSteps[nextStepIndex]);
+                            } else {
+                                debug && console.log("Onborda: Observing for element...", currentTourSteps[nextStepIndex]);
                             }
-                        });
+                        }else {
+                            console.log("Onborda: No selector set for next step while observing", currentTourSteps[nextStepIndex]);
+                            setCurrentStep(nextStepIndex);
+                            observer.disconnect();
+                        }
+                    });
 
-                        // Start observing the document body for changes
-                        observer.observe(document.body, {
-                            childList: true,
-                            subtree: true,
-                        });
-                    } else {
-                        // If no selector is provided, just update the step
-                        setCurrentStep(nextStepIndex);
-                    }
+                    // Start observing the document body for changes
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                    });
+
+                    // Set a timeout to disconnect the observer if the element is not found within a certain period
+                    const timeoutId = setTimeout(() => {
+                        observer.disconnect();
+                        console.error("Onborda: Element not found within the timeout period");
+                    }, observerTimeout); // Adjust the timeout period as needed
+
+                    // Clear the timeout if the observer disconnects successfully
+                    const originalDisconnect = observer.disconnect.bind(observer);
+                    observer.disconnect = () => {
+                        clearTimeout(timeoutId);
+                        originalDisconnect();
+                    };
+
                 } else {
+                    // If no route is set, update the step instantly
                     setCurrentStep(nextStepIndex);
-                    scrollToElement(nextStepIndex);
                 }
             } catch (error) {
                 console.error("Error navigating to next route", error);
@@ -259,37 +231,54 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const route = currentTourSteps[currentStep].prevRoute;
 
                 if (route) {
+
+                    // Trigger the previous route
                     await router.push(route);
 
-                    const shouldSelect = hasSelector(currentTourSteps[prevStepIndex]);
-                    if (shouldSelect) {
-                        // Use MutationObserver to detect when the target element is available in the DOM
-                        const observer = new MutationObserver((mutations, observer) => {
+                    // Use MutationObserver to detect when the target element is available in the DOM
+                    const observer = new MutationObserver((mutations, observer) => {
+                        const shouldSelect = hasSelector(currentTourSteps[prevStepIndex]);
+                        if (shouldSelect) {
                             const element = getStepSelectorElement(currentTourSteps[prevStepIndex]);
                             if (element) {
                                 // Once the element is found, update the step and scroll to the element
                                 setCurrentStep(prevStepIndex);
-                                scrollToElement(prevStepIndex);
 
                                 // Stop observing after the element is found
                                 observer.disconnect();
-                            }else {
-                                debug && console.log("Onborda: Element not found", currentTourSteps[prevStepIndex]);
+                            } else {
+                                // Continue observing until the element is found
+                                debug && console.log("Onborda: Observing for element...", currentTourSteps[prevStepIndex]);
                             }
-                        });
+                        }else {
+                            debug && console.log("Onborda: No selector set for previous step while observing", currentTourSteps[prevStepIndex]);
+                            setCurrentStep(prevStepIndex);
+                            observer.disconnect();
+                        }
+                    });
 
-                        // Start observing the document body for changes
-                        observer.observe(document.body, {
-                            childList: true,
-                            subtree: true,
-                        });
-                    } else {
-                        // If no selector is provided, just update the step
-                        setCurrentStep(prevStepIndex);
-                    }
+                    // Start observing the document body for changes
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                    });
+
+                    // Set a timeout to disconnect the observer if the element is not found within a certain period
+                    const timeoutId = setTimeout(() => {
+                        observer.disconnect();
+                        console.error("Onborda: Element not found within the timeout period");
+                    }, observerTimeout); // Adjust the timeout period as needed
+
+                    // Clear the timeout if the observer disconnects successfully
+                    const originalDisconnect = observer.disconnect.bind(observer);
+                    observer.disconnect = () => {
+                        clearTimeout(timeoutId);
+                        originalDisconnect();
+                    };
+
                 } else {
+                    // If no route is set, update the step instantly
                     setCurrentStep(prevStepIndex);
-                    scrollToElement(prevStepIndex);
                 }
             } catch (error) {
                 console.error("Error navigating to previous route", error);
@@ -297,203 +286,6 @@ const Onborda: React.FC<OnbordaProps> = ({
         }
     };
 
-    // - -
-    // Scroll to the correct element when the step changes
-    const scrollToElement = (stepIndex: number) => {
-        if (currentTourSteps) {
-            const element = getStepSelectorElement(currentTourSteps[stepIndex]);
-            if (element) {
-                const {top} = element.getBoundingClientRect();
-                const isInViewport = top >= -offset && top <= window.innerHeight + offset;
-                if (!isInViewport) {
-                    element.scrollIntoView({behavior: "smooth", block: "center"});
-                }
-                // Update pointer position after scrolling
-                setPointerPosition(getElementPosition(element));
-            } else {
-                // if the element is not found, place the pointer at the center of the screen
-                setPointerPosition({
-                    x: window.innerWidth / 2,
-                    y: window.innerHeight / 2,
-                    width: 0,
-                    height: 0,
-                });
-                setElementToScroll(null);
-                currentElementRef.current = null;
-            }
-        }
-    };
-
-    // - -
-    // Card Side
-    const getCardStyle: (side: string) => React.CSSProperties = (side: string) => {
-        switch (side) {
-            case "top":
-                return {
-                    transform: `translate(-50%, 0)`,
-                    left: "50%",
-                    bottom: "100%",
-                    marginBottom: "25px",
-                };
-            case "bottom":
-                return {
-                    transform: `translate(-50%, 0)`,
-                    left: "50%",
-                    top: "100%",
-                    marginTop: "25px",
-                };
-            case "left":
-                return {
-                    transform: `translate(0, -50%)`,
-                    right: "100%",
-                    top: "50%",
-                    marginRight: "25px",
-                };
-            case "right":
-                return {
-                    transform: `translate(0, -50%)`,
-                    left: "100%",
-                    top: "50%",
-                    marginLeft: "25px",
-                };
-            case "top-left":
-                return {
-                    bottom: "100%",
-                    marginBottom: "25px",
-                };
-            case "top-right":
-                return {
-                    right: 0,
-                    bottom: "100%",
-                    marginBottom: "25px",
-                };
-            case "bottom-left":
-                return {
-                    top: "100%",
-                    marginTop: "25px",
-                };
-            case "bottom-right":
-                return {
-                    right: 0,
-                    top: "100%",
-                    marginTop: "25px",
-                };
-            case "right-bottom":
-                return {
-                    left: "100%",
-                    bottom: 0,
-                    marginLeft: "25px",
-                };
-            case "right-top":
-                return {
-                    left: "100%",
-                    top: 0,
-                    marginLeft: "25px",
-                };
-            case "left-bottom":
-                return {
-                    right: "100%",
-                    bottom: 0,
-                    marginRight: "25px",
-                };
-            case "left-top":
-                return {
-                    right: "100%",
-                    top: 0,
-                    marginRight: "25px",
-                };
-            default:
-                // Default case if no side is specified. Center the card to the screen
-                return {
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)', // Center the card
-                    position: 'fixed', // Make sure it's positioned relative to the viewport
-                    margin: '0',
-                };
-        }
-    }
-
-    // - -
-    // Arrow position based on card side
-    const getArrowStyle: (side: string) => React.CSSProperties = (side: string) => {
-        switch (side) {
-            case "bottom":
-                return {
-                    transform: `translate(-50%, 0) rotate(270deg)`,
-                    left: "50%",
-                    top: "-23px",
-                };
-            case "top":
-                return {
-                    transform: `translate(-50%, 0) rotate(90deg)`,
-                    left: "50%",
-                    bottom: "-23px",
-                };
-            case "right":
-                return {
-                    transform: `translate(0, -50%) rotate(180deg)`,
-                    top: "50%",
-                    left: "-23px",
-                };
-            case "left":
-                return {
-                    transform: `translate(0, -50%) rotate(0deg)`,
-                    top: "50%",
-                    right: "-23px",
-                };
-            case "top-left":
-                return {
-                    transform: `rotate(90deg)`,
-                    left: "10px",
-                    bottom: "-23px",
-                };
-            case "top-right":
-                return {
-                    transform: `rotate(90deg)`,
-                    right: "10px",
-                    bottom: "-23px",
-                };
-            case "bottom-left":
-                return {
-                    transform: `rotate(270deg)`,
-                    left: "10px",
-                    top: "-23px",
-                };
-            case "bottom-right":
-                return {
-                    transform: `rotate(270deg)`,
-                    right: "10px",
-                    top: "-23px",
-                };
-            case "right-bottom":
-                return {
-                    transform: `rotate(180deg)`,
-                    left: "-23px",
-                    bottom: "10px",
-                };
-            case "right-top":
-                return {
-                    transform: `rotate(180deg)`,
-                    left: "-23px",
-                    top: "10px",
-                };
-            case "left-bottom":
-                return {
-                    transform: `rotate(0deg)`,
-                    right: "-23px",
-                    bottom: "10px",
-                };
-            case "left-top":
-                return {
-                    transform: `rotate(0deg)`,
-                    right: "-23px",
-                    top: "10px",
-                };
-            default:
-                return {}; // Default case if no side is specified
-        }
-    };
 
     // - -
     // Card Arrow
@@ -534,12 +326,22 @@ const Onborda: React.FC<OnbordaProps> = ({
             {children}
         </div>
 
+        {/* Onborda Tour */}
+        {/*<div data-name={'onborda-tour-wrapper'}*/}
+        {/*     className={'fixed top-0 left-0 z-[999] w-screen h-screen pointer-events-none'}>*/}
+        {/*    {TourComponent && currentTourSteps && (*/}
+        {/*        <div data-name={'onborda-tour'} className={'pointer-events-auto'}>*/}
+        {/*            <TourComponent steps={currentTourSteps} currentTour={currentTour} currentStep={currentStep}/>*/}
+        {/*        </div>*/}
+        {/*    )}*/}
+        {/*</div>*/}
+
         {/* Onborda Overlay Step Content */}
         {pointerPosition && isOnbordaVisible && CardComponent && (
             <Portal>
                 <motion.div
                     data-name="onborda-overlay"
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none z-[997]"
                     initial="hidden"
                     animate={isOnbordaVisible ? "visible" : "hidden"}
                     variants={variants}
@@ -595,17 +397,25 @@ const Onborda: React.FC<OnbordaProps> = ({
                         </div>
                     </motion.div>
                 </motion.div>
+                {TourComponent && currentTourSteps && (
+                    <motion.div
+                        data-name={'onborda-tour-wrapper'}
+                        className={'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none'}
+                    >
+                        <motion.div
+                            data-name={'onborda-tour'}
+                            className={'pointer-events-auto'}
+                        >
+                            <TourComponent
+                                steps={currentTourSteps}
+                                currentTour={currentTour}
+                                currentStep={currentStep}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
             </Portal>
         )}
-
-        <div data-name={'onborda-tour-wrapper'}
-             className={'fixed top-0 left-0 z-[999] w-screen h-screen pointer-events-none'}>
-            {TourComponent && currentTourSteps && (
-                <div data-name={'onborda-tour'} className={'pointer-events-auto'}>
-                    <TourComponent steps={currentTourSteps} currentTour={currentTour} currentStep={currentStep}/>
-                </div>
-            )}
-        </div>
     </>);
 };
 

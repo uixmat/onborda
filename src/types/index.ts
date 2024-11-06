@@ -37,16 +37,37 @@ export interface Tour {
 }
 
 // Onborda
+//
 export interface OnbordaProps {
-  children: React.ReactNode;
-  steps: Tour[];
-  showOnborda?: boolean;
-  shadowRgb?: string;
-  shadowOpacity?: string;
-  cardTransition?: Transition;
-  cardComponent?: React.ComponentType<CardComponentProps>;
-  tourComponent?: React.ComponentType<TourComponentProps>;
-  debug?: boolean;
+    // The children elements to be rendered inside the Onborda component
+    children: React.ReactNode;
+
+    // An array of tours, each containing multiple steps
+    steps: Tour[];
+
+    // Flag to show or hide the Onborda component
+    showOnborda?: boolean;
+
+    // RGB value for the shadow color
+    shadowRgb?: string;
+
+    // Opacity value for the shadow
+    shadowOpacity?: string;
+
+    // Transition settings for the card component
+    cardTransition?: Transition;
+
+    // Custom card component to be used in the Onborda
+    cardComponent?: React.ComponentType<CardComponentProps>;
+
+    // Custom tour component to be used in the Onborda
+    tourComponent?: React.ComponentType<TourComponentProps>;
+
+    // Flag to enable or disable debug mode
+    debug?: boolean;
+
+    // Timeout value for the observer when observing for the target element
+    observerTimeout?: number;
 }
 
 // Custom Card
