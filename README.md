@@ -66,6 +66,7 @@ export const CustomCard = ({
   nextStep,
   prevStep,
   arrow,
+  canProceed
 }: CardComponentProps) => {
   return (
     <div>
@@ -73,7 +74,7 @@ export const CustomCard = ({
       <h2>{currentStep} of {totalSteps}</h2>
       <p>{step.content}</p>
       <button onClick={prevStep}>Previous</button>
-      <button onClick={nextStep}>Next</button>
+      <button onClick={nextStep} disabled={canPoceed}>Next</button>
       {arrow}
     </div>
   )
@@ -130,20 +131,36 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
 
 ### Step object
 
-| Prop                  | Type                                     | Description                                                                                                                                                                                 |
-|-----------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `icon`                | `React.ReactNode`, `string`, `null`      | An icon or element to display alongside the step title.                                                                                                                                     |
-| `title`               | `string`                                 | The title of your step                                                                                                                                                                      |
-| `content`             | `React.ReactNode`                        | The main content or body of the step.                                                                                                                                                       |
-| `selector`            | `string`                                 | Optional. A string used to target an Element by `id` that this step refers to. Takes precedence over `customQuerySelector`.                                                                 |
-| `customQuerySelector` | `()=>Element \| null`                    | Optional. A client function that returns the element to target that this step refers to. Proceeded by `selector`. <br> Useful for targeting complex elements, like those from UI libraries. |
-| `side`                | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.                                                                                                              |
-| `showControls`        | `boolean`                                | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.                                                                                        |
-| `pointerPadding`      | `number`                                 | Optional. The padding around the pointer (keyhole) highlighting the target element.                                                                                                         |
-| `pointerRadius`       | `number`                                 | Optional. The border-radius of the pointer (keyhole) highlighting the target element.                                                                                                       |
-| `nextRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the next step.                                                                                                    |
-| `prevRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                                                                                                |
-| `interactable`        | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                 |
+| Prop                  | Type                                     | Description                                                                                                                                                                                     |
+|-----------------------|------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `icon`                | `React.ReactNode`, `string`, `null`      | An icon or element to display alongside the step title.                                                                                                                                         |
+| `title`               | `string`                                 | The title of your step                                                                                                                                                                          |
+| `content`             | `React.ReactNode`                        | The main content or body of the step.                                                                                                                                                           |
+| `selector`            | `string`                                 | Optional. A string used to target an Element by `id` that this step refers to. Takes precedence over `customQuerySelector`.                                                                     |
+| `customQuerySelector` | `()=>Element \| null`                    | Optional. A client function that returns the element to target that this step refers to. Proceeded by `selector`. <br> Useful for targeting complex elements, like those from UI libraries.     |
+| `side`                | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.                                                                                                                  |
+| `showControls`        | `boolean`                                | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.                                                                                            |
+| `pointerPadding`      | `number`                                 | Optional. The padding around the pointer (keyhole) highlighting the target element.                                                                                                             |
+| `pointerRadius`       | `number`                                 | Optional. The border-radius of the pointer (keyhole) highlighting the target element.                                                                                                           |
+| `nextRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the next step.                                                                                                        |
+| `prevRoute`           | `string`                                 | Optional. The route to navigate to using `next/navigation` when moving to the previous step.                                                                                                    |
+| `interactable`        | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                     |
+| `nextStepConditions`  | `(element: Element \| null)=>boolean`    | Optional. A client function that returns a boolean thats passed to the CardComponents `canProceed` prop. Gets bound to an event listener on the target element on `click`,`input` and `change`. |
+
+```tsx
+{
+  icon: <>👋</>,
+  title: "Tour 1, Step 1",
+  content: <>First tour, first step</>,
+  selector: "#tour1-step1",
+  side: "top",
+  showControls: true,
+  pointerPadding: 10,
+  pointerRadius: 10,
+  nextRoute: "/foo",
+  prevRoute: "/bar"
+}
+```
 
 ### Example `steps`
 
@@ -162,12 +179,39 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
       pointerRadius: 10,
       nextRoute: "/foo",
       prevRoute: "/bar"
+    },
+    {
+      icon: <>👋</>,
+      title: "Tour 1, Step 2",
+      content: <>First tour, second step. To proceed please provide a value</>,
+      selector: "#tour1-step2-input", // target the input
+      nextStepConditions: (element) => ((element as HTMLInputElement)?.value?.trim() !== ''), // only allow next step if targatted element has a value
+      interactable: true, // allow user to interact with the input
+      side: "right",
+      showControls: true,
+      pointerPadding: 10,
+      pointerRadius: 10,
+      nextRoute: "/foo",
+      prevRoute: "/bar"
+    },
+    {
+      icon: <>👋</>,
+      title: "Tour 1, Step 3",
+      content: <>Thanks for settings the value</>,
+      selector: "#tour1-step3",
+      side: "top",
+      showControls: true,
+      pointerPadding: 10,
+      pointerRadius: 10,
+      nextRoute: "/foo",
+      prevRoute: "/bar"
     }
     ...
   ],
   tour: "secondtour",
   steps: [
-    icon: <>👋👋</>,
+    {
+      icon: <>👋👋</>,
       title: "Second tour, Step 1",
       content: <>Second tour, first step!</>,
       //selector: "#onborda-step1",
@@ -177,25 +221,27 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
       pointerPadding: 10,
       pointerRadius: 10,
       nextRoute: "/foo",
-      prevRoute: "/bar", 
-      interactable: true 
+      prevRoute: "/bar",
+      interactable: true,
+    }
   ]
 }
 ```
 
 ### Onborda Props
 
-| Property         | Type              | Description                                                                                                                                                                                                                                |
-|------------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `children`       | `React.ReactNode` | Your website or application content.                                                                                                                                                                                                       |
-| `steps`          | `Array[]`         | An array of `Step` objects defining each step of the onboarding process.                                                                                                                                                                   |
-| `showOnborda`    | `boolean`         | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                                                                                                                 |
-| `shadowRgb`      | `string`          | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.                                                                                                                                    |
-| `shadowOpacity`  | `string`          | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`                                                                                                                                                |
-| `cardTransition` | `Transition`      | Transitions between steps are of the type Transition from [framer-motion](https://www.framer.com/motion/transition/), see the [transition docs](https://www.framer.com/motion/transition/) for more info. Example: `{{ type: "spring" }}`. |
-| `cardComponent`  | `React.ReactNode` | The React component to use as the card for each step.                                                                                                                                                                                       |
-| `tourComponent`  | `React.ReactNode` | The React component to use as a list of steps for the current tour.                                                                                                                                                                        |
-| `debug`          | `boolean`         | Optional. Console logs the current step and the target element. Defaults to `false`.                                                                                                                                                       |
+| Property         | Type              | Description                                                                                                                                                                                                                                                                         |
+|------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `children`       | `React.ReactNode` | Your website or application content.                                                                                                                                                                                                                                                |
+| `steps`          | `Array[]`         | An array of `Step` objects defining each step of the onboarding process.                                                                                                                                                                                                            |
+| `showOnborda`    | `boolean`         | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                                                                                                                                                          |
+| `shadowRgb`      | `string`          | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.                                                                                                                                                                             |
+| `shadowOpacity`  | `string`          | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`                                                                                                                                                                                         |
+| `cardTransition` | `Transition`      | Transitions between steps are of the type Transition from [framer-motion](https://www.framer.com/motion/transition/), see the [transition docs](https://www.framer.com/motion/transition/) for more info. Example: `{{ type: "spring" }}`.                                                                                                                      |
+| `cardComponent`  | `React.ReactNode` | The React component to use as the card for each step.                                                                                                                                                                                                                               |
+| `tourComponent`  | `React.ReactNode` | The React component to use as a list of steps for the current tour.                                                                                                                                                                                                                 |
+| `debug`          | `boolean`         | Optional. Console logs the current step and the target element. Defaults to `false`.                                                                                                                                                                                                |
+| `observerTimeout`| `number`          | Optional. The timeout in milliseconds for the observer to wait for the target element to be available. Defaults to `5000`. Observer is used to wait for the target element to be available before proceeding to the next step e.g. when the target element is on a different route. |
 
 
 ```tsx
