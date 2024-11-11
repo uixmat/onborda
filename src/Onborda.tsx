@@ -24,7 +24,7 @@ const Onborda: React.FC<OnbordaProps> = ({
     debug = false,
     observerTimeout = 5000,
 }: OnbordaProps) => {
-    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps} = useOnborda();
+    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps} = useOnborda();
 
     const [elementToScroll, setElementToScroll] = useState<Element | null>(null);
     const [pointerPosition, setPointerPosition] = useState<{
@@ -34,7 +34,6 @@ const Onborda: React.FC<OnbordaProps> = ({
         height: number;
     } | null>(null);
     const currentElementRef = useRef<Element | null>(null);
-    const [canProceed, setCanProceed] = useState(true);
     const offset = 20;
 
     const hasSelector = (step: Step): boolean => {
@@ -100,10 +99,11 @@ const Onborda: React.FC<OnbordaProps> = ({
         const step = currentTourSteps?.[currentStep];
         const element = step ? getStepSelectorElement(step) : null;
 
-        if (element && step?.nextStepConditions) {
+        if (element && step?.isCompleteConditions) {
             const handleInteraction = () => {
-                const canProceed = step?.nextStepConditions?.(element) ?? true;
-                setCanProceed(canProceed);
+                if (step?.isCompleteConditions?.(element) ?? true) {
+                    setCompletedSteps((prev) => {return prev.add(step?.id ?? currentStep);});
+                }
             };
             // Initial check
             handleInteraction();
@@ -119,7 +119,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                 element.removeEventListener("change", handleInteraction);
             };
         }else {
-            setCanProceed(true);
+            setCompletedSteps((prev) => {return prev.add(step?.id ?? currentStep);});
         }
     }, [currentStep, currentTourSteps]);
 
@@ -480,7 +480,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 prevStep={prevStep}
                                 setStep={setStep}
                                 arrow={<CardArrow isVisible={currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false}/>}
-                                canProceed={canProceed}
+                                completedSteps={Array.from(completedSteps)}
                             />
                         </div>
                     </motion.div>
@@ -499,6 +499,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 currentTour={currentTour}
                                 currentStep={currentStep}
                                 setStep={setStep}
+                                completedSteps={Array.from(completedSteps)}
                             />
                         </motion.div>
                     </motion.div>

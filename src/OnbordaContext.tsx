@@ -32,6 +32,7 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
   const [currentStep, setCurrentStepState] = useState(0);
   const [isOnbordaVisible, setOnbordaVisible] = useState(false);
   const [currentTourSteps, setCurrentTourSteps] = useState<Step[]>([]);
+  const [completedSteps, setCompletedSteps] = useState<Set<number|string>>(new Set());
 
   const setCurrentStep = useCallback((step: number | string, delay?: number) => {
     // If step is a string, find the index of the step with that id
@@ -62,6 +63,7 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
     setCurrentTour(tourName);
     setCurrentStepState(0);
     setCurrentTourSteps(tours.find((tour) => tour.tour === tourName)?.steps || []);
+    setCompletedSteps(new Set([...(tours.find((tour) => tour.tour === tourName)?.completedSteps || [])]));
     setOnbordaVisible(true);
   }, []);
 
@@ -75,6 +77,8 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
         closeOnborda,
         startOnborda,
         isOnbordaVisible,
+        completedSteps,
+        setCompletedSteps
       }}
     >
       {children}

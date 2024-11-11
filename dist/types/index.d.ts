@@ -20,6 +20,10 @@ export interface OnbordaContextType {
     startOnborda: (tourName: string) => void;
     /** flag to check if Onborda is visible */
     isOnbordaVisible: boolean;
+    /** default completed steps */
+    completedSteps: Set<number | string>;
+    /** setstate function to set the completed steps */
+    setCompletedSteps: React.Dispatch<React.SetStateAction<Set<number | string>>>;
 }
 export interface Step {
     /** The unique identifier for the step */
@@ -45,7 +49,7 @@ export interface Step {
     /** Flag to make the step interactable */
     interactable?: boolean;
     /** Conditions to be met before the next step can be triggered. Function is bound to event listeners on the target element on 'input', 'change' and 'click' events. */
-    nextStepConditions?: (element: Element | null) => boolean;
+    isCompleteConditions?: (element: Element | null) => boolean;
     /** The route for this step */
     route?: string;
     /** The route to navigate to for the next step */
@@ -60,6 +64,8 @@ export interface Tour {
     tour: string;
     /** An array of steps in the tour */
     steps: Step[];
+    /** Default completed steps */
+    completedSteps?: (string | number)[];
 }
 export interface OnbordaProps {
     /** The children elements to be rendered inside the Onborda component */
@@ -99,8 +105,8 @@ export interface CardComponentProps {
     prevStep: () => void;
     /** The arrow element to be displayed in the card */
     arrow: JSX.Element;
-    /** Boolean for whether the nextStepConditions are met */
-    canProceed: boolean;
+    /** Array of completed steps */
+    completedSteps: (string | number)[];
 }
 export interface TourComponentProps {
     /** The current tour name */
@@ -111,4 +117,6 @@ export interface TourComponentProps {
     steps: Step[];
     /** Function to set the current step by step index or step.id */
     setStep: (step: number | string) => void;
+    /** Array of completed steps */
+    completedSteps: (string | number)[];
 }

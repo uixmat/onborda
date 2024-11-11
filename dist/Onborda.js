@@ -12,11 +12,10 @@ import { getCardStyle, getArrowStyle } from "./OnbordaStyles";
  * @constructor
  */
 const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, tourComponent: TourComponent, debug = false, observerTimeout = 5000, }) => {
-    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps } = useOnborda();
+    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps } = useOnborda();
     const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
-    const [canProceed, setCanProceed] = useState(true);
     const offset = 20;
     const hasSelector = (step) => {
         return !!step?.selector || !!step?.customQuerySelector;
@@ -76,10 +75,11 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
     useEffect(() => {
         const step = currentTourSteps?.[currentStep];
         const element = step ? getStepSelectorElement(step) : null;
-        if (element && step?.nextStepConditions) {
+        if (element && step?.isCompleteConditions) {
             const handleInteraction = () => {
-                const canProceed = step?.nextStepConditions?.(element) ?? true;
-                setCanProceed(canProceed);
+                if (step?.isCompleteConditions?.(element) ?? true) {
+                    setCompletedSteps((prev) => { return prev.add(step?.id ?? currentStep); });
+                }
             };
             // Initial check
             handleInteraction();
@@ -94,7 +94,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
             };
         }
         else {
-            setCanProceed(true);
+            setCompletedSteps((prev) => { return prev.add(step?.id ?? currentStep); });
         }
     }, [currentStep, currentTourSteps]);
     // - -
@@ -367,6 +367,6 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                     width: pointerPosition.width + pointerPadding,
                                     height: pointerPosition.height + pointerPadding,
                                 }
-                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), canProceed: canProceed }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep, setStep: setStep }) }) }))] }))] }));
+                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), completedSteps: Array.from(completedSteps) }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep, setStep: setStep, completedSteps: Array.from(completedSteps) }) }) }))] }))] }));
 };
 export default Onborda;
