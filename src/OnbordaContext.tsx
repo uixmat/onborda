@@ -42,7 +42,6 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
         }
         step = index;
     }
-    console.log('setCurrentStep', step);
     if (delay) {
       setTimeout(() => {
         setCurrentStepState(step);

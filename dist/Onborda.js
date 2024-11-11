@@ -163,7 +163,8 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
             try {
                 const nextStepIndex = currentStep + 1;
                 const route = currentTourSteps[nextStepIndex].route;
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
                     // Trigger the next route
                     await router.push(route);
                     // Use MutationObserver to detect when the target element is available in the DOM
@@ -219,7 +220,8 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
             try {
                 const prevStepIndex = currentStep - 1;
                 const route = currentTourSteps[prevStepIndex].route;
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
                     // Trigger the previous route
                     await router.push(route);
                     // Use MutationObserver to detect when the target element is available in the DOM
@@ -276,7 +278,8 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
             try {
                 const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
                 const route = currentTourSteps[setStepIndex].route;
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
                     // Trigger the next route
                     await router.push(route);
                     // Use MutationObserver to detect when the target element is available in the DOM

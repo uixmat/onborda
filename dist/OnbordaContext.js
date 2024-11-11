@@ -30,7 +30,6 @@ const OnbordaProvider = ({ children, tours = [], }) => {
             }
             step = index;
         }
-        console.log('setCurrentStep', step);
         if (delay) {
             setTimeout(() => {
                 setCurrentStepState(step);

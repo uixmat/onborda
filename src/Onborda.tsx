@@ -193,8 +193,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const nextStepIndex = currentStep + 1;
                 const route = currentTourSteps[nextStepIndex].route;
 
-
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
 
                     // Trigger the next route
                     await router.push(route);
@@ -256,7 +256,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const prevStepIndex = currentStep - 1;
                 const route = currentTourSteps[prevStepIndex].route;
 
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
 
                     // Trigger the previous route
                     await router.push(route);
@@ -318,7 +319,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                 const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
                 const route = currentTourSteps[setStepIndex].route;
 
-                if (route) {
+                // Check if the route is set and different from the current route
+                if (route && currentTourSteps[currentStep].route !== route) {
                     // Trigger the next route
                     await router.push(route);
 
