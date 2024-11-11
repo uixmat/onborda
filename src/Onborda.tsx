@@ -16,7 +16,6 @@ import {getCardStyle, getArrowStyle} from "./OnbordaStyles";
  */
 const Onborda: React.FC<OnbordaProps> = ({
     children,
-    steps,
     shadowRgb = "0, 0, 0",
     shadowOpacity = "0.2",
     cardTransition = {ease: "anticipate", duration: 0.6},
@@ -25,10 +24,7 @@ const Onborda: React.FC<OnbordaProps> = ({
     debug = false,
     observerTimeout = 5000,
 }: OnbordaProps) => {
-    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible} = useOnborda();
-    const currentTourSteps = steps.find(
-        (tour) => tour.tour === currentTour
-    )?.steps;
+    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps} = useOnborda();
 
     const [elementToScroll, setElementToScroll] = useState<Element | null>(null);
     const [pointerPosition, setPointerPosition] = useState<{
@@ -83,9 +79,10 @@ const Onborda: React.FC<OnbordaProps> = ({
                     currentElementRef.current = null;
                 }
                 // Prefetch the next route
-                if (step?.nextRoute) {
-                    debug && console.log("Onborda: Prefetching Next Route", step.nextRoute);
-                    router.prefetch(step.nextRoute);
+                const nextStep = currentTourSteps[currentStep + 1];
+                if (nextStep && nextStep?.route) {
+                    debug && console.log("Onborda: Prefetching Next Route", nextStep.route);
+                    router.prefetch(nextStep.route);
                 }
             }
         }
@@ -194,7 +191,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         if (currentTourSteps && currentStep < currentTourSteps.length - 1) {
             try {
                 const nextStepIndex = currentStep + 1;
-                const route = currentTourSteps[currentStep].nextRoute;
+                const route = currentTourSteps[nextStepIndex].route;
 
 
                 if (route) {
@@ -257,7 +254,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         if (currentTourSteps && currentStep > 0) {
             try {
                 const prevStepIndex = currentStep - 1;
-                const route = currentTourSteps[currentStep].prevRoute;
+                const route = currentTourSteps[prevStepIndex].route;
 
                 if (route) {
 
@@ -314,6 +311,66 @@ const Onborda: React.FC<OnbordaProps> = ({
             }
         }
     };
+
+    const setStep = async (step: number | string) => {
+        if (currentTourSteps){
+            try {
+                const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
+                const route = currentTourSteps[setStepIndex].route;
+
+                if (route) {
+                    // Trigger the next route
+                    await router.push(route);
+
+                    // Use MutationObserver to detect when the target element is available in the DOM
+                    const observer = new MutationObserver((mutations, observer) => {
+                        const shouldSelect = hasSelector(currentTourSteps[setStepIndex]);
+                        if (shouldSelect) {
+                            const element = getStepSelectorElement(currentTourSteps[setStepIndex]);
+                            if (element) {
+                                // Once the element is found, update the step and scroll to the element
+                                setCurrentStep(setStepIndex);
+
+                                // Stop observing after the element is found
+                                observer.disconnect();
+                            } else {
+                                debug && console.log("Onborda: Observing for element...", currentTourSteps[setStepIndex]);
+                            }
+                        } else {
+                            console.log("Onborda: No selector set for next step while observing", currentTourSteps[setStepIndex]);
+                            setCurrentStep(setStepIndex);
+                            observer.disconnect();
+                        }
+                    });
+
+                    // Start observing the document body for changes
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                    });
+
+                    // Set a timeout to disconnect the observer if the element is not found within a certain period
+                    const timeoutId = setTimeout(() => {
+                        observer.disconnect();
+                        console.error("Onborda: Element not found within the timeout period");
+                    }, observerTimeout); // Adjust the timeout period as needed
+
+                    // Clear the timeout if the observer disconnects successfully
+                    const originalDisconnect = observer.disconnect.bind(observer);
+                    observer.disconnect = () => {
+                        clearTimeout(timeoutId);
+                        originalDisconnect();
+                    };
+
+                } else {
+                    // If no route is set, update the step instantly
+                    setCurrentStep(setStepIndex);
+                }
+            } catch (error) {
+                console.error("Error navigating to next route", error);
+            }
+        }
+    }
 
 
     // - -
@@ -419,6 +476,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 totalSteps={currentTourSteps?.length ?? 0}
                                 nextStep={nextStep}
                                 prevStep={prevStep}
+                                setStep={setStep}
                                 arrow={<CardArrow isVisible={currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false}/>}
                                 canProceed={canProceed}
                             />
@@ -438,6 +496,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 steps={currentTourSteps}
                                 currentTour={currentTour}
                                 currentStep={currentStep}
+                                setStep={setStep}
                             />
                         </motion.div>
                     </motion.div>

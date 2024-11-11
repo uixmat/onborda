@@ -16,11 +16,21 @@ const useOnborda = () => {
     }
     return context;
 };
-const OnbordaProvider = ({ children, }) => {
+const OnbordaProvider = ({ children, tours = [], }) => {
     const [currentTour, setCurrentTour] = useState(null);
     const [currentStep, setCurrentStepState] = useState(0);
     const [isOnbordaVisible, setOnbordaVisible] = useState(false);
+    const [currentTourSteps, setCurrentTourSteps] = useState([]);
     const setCurrentStep = useCallback((step, delay) => {
+        // If step is a string, find the index of the step with that id
+        if (typeof step === 'string') {
+            const index = currentTourSteps.findIndex((s) => s?.id === step);
+            if (index === -1) {
+                throw new Error(`Step with id ${step} not found`);
+            }
+            step = index;
+        }
+        console.log('setCurrentStep', step);
         if (delay) {
             setTimeout(() => {
                 setCurrentStepState(step);
@@ -39,11 +49,13 @@ const OnbordaProvider = ({ children, }) => {
     const startOnborda = useCallback((tourName) => {
         setCurrentTour(tourName);
         setCurrentStepState(0);
+        setCurrentTourSteps(tours.find((tour) => tour.tour === tourName)?.steps || []);
         setOnbordaVisible(true);
     }, []);
     return (_jsx(OnbordaContext.Provider, { value: {
             currentTour,
             currentStep,
+            currentTourSteps,
             setCurrentStep,
             closeOnborda,
             startOnborda,

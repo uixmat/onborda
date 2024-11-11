@@ -1,18 +1,36 @@
 import { Transition } from "framer-motion";
 
+// Provider
+export interface OnbordaProviderProps {
+    /** The children elements to be rendered inside the OnbordaProvider component */
+    children: React.ReactNode;
+    /** An array of tours, each containing multiple steps */
+    tours: Tour[];
+}
+
 // Context
 export interface OnbordaContextType {
-  currentStep: number;
-  currentTour: string | null;
-  setCurrentStep: (step: number, delay?: number) => void;
-  closeOnborda: () => void;
-  startOnborda: (tourName: string) => void;
-  isOnbordaVisible: boolean;
+    /** current step index */
+    currentStep: number;
+    /** current tour name */
+    currentTour: string | null;
+    /** current tour steps */
+    currentTourSteps: Step[];
+    /** function to set the current step */
+    setCurrentStep: (step: number | string, delay?: number) => void;
+    /** function to close Onborda */
+    closeOnborda: () => void;
+    /** function to start Onborda */
+    startOnborda: (tourName: string) => void;
+    /** flag to check if Onborda is visible */
+    isOnbordaVisible: boolean;
 }
 
 // Step
 export interface Step {
     // Step Content
+    /** The unique identifier for the step */
+    id?: string;
     /** The icon to be displayed in the step */
     icon: React.ReactNode | string | null;
     /** The title of the step */
@@ -39,9 +57,13 @@ export interface Step {
     nextStepConditions?: (element: Element | null) => boolean;
 
     // Routing
+    /** The route for this step */
+    route?: string;
     /** The route to navigate to for the next step */
+    /** @deprecated Use `route` instead */
     nextRoute?: string;
     /** The route to navigate to for the previous step */
+    /** @deprecated Use `route` instead */
     prevRoute?: string;
 
 }
@@ -49,8 +71,10 @@ export interface Step {
 // Tour
 // 
 export interface Tour {
-  tour: string;
-  steps: Step[];
+    /** The name of the tour */
+    tour: string;
+    /** An array of steps in the tour */
+    steps: Step[];
 }
 
 // Onborda
@@ -60,7 +84,8 @@ export interface OnbordaProps {
     children: React.ReactNode;
 
     /** An array of tours, each containing multiple steps */
-    steps: Tour[];
+    /** @deprecated Use `OnbordaProvider.tours` instead */
+    steps?: Tour[];
 
     /** Flag to show or hide the Onborda component */
     showOnborda?: boolean;
@@ -98,6 +123,9 @@ export interface CardComponentProps {
     /** The total number of steps in the tour */
     totalSteps: number;
 
+    /** Function to set the current step by step index or step.id */
+    setStep: (step: number | string) => void;
+
     /** Function to navigate to the next step */
     nextStep: () => void;
 
@@ -113,7 +141,12 @@ export interface CardComponentProps {
 
 // Tour Component
 export interface TourComponentProps {
-  currentTour: string | null;
-  currentStep: number;
-  steps: Step[];
+    /** The current tour name */
+    currentTour: string | null;
+    /** The index of the current step */
+    currentStep: number;
+    /** An array of steps in the current tour */
+    steps: Step[];
+    /** Function to set the current step by step index or step.id */
+    setStep: (step: number | string) => void;
 }

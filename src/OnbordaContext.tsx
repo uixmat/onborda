@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 
 // Types
-import { OnbordaContextType } from "./types";
+import {OnbordaContextType, OnbordaProviderProps, Step, Tour} from "./types";
 
 // Example Hooks Usage:
 // const { setCurrentStep, closeOnborda, startOnborda } = useOnborda();
@@ -24,14 +24,25 @@ const useOnborda = () => {
   return context;
 };
 
-const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
+const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
   children,
+  tours = [],
 }) => {
   const [currentTour, setCurrentTour] = useState<string | null>(null);
   const [currentStep, setCurrentStepState] = useState(0);
   const [isOnbordaVisible, setOnbordaVisible] = useState(false);
+  const [currentTourSteps, setCurrentTourSteps] = useState<Step[]>([]);
 
-  const setCurrentStep = useCallback((step: number, delay?: number) => {
+  const setCurrentStep = useCallback((step: number | string, delay?: number) => {
+    // If step is a string, find the index of the step with that id
+    if (typeof step === 'string') {
+        const index = currentTourSteps.findIndex((s) => s?.id === step);
+        if (index === -1) {
+            throw new Error(`Step with id ${step} not found`);
+        }
+        step = index;
+    }
+    console.log('setCurrentStep', step);
     if (delay) {
       setTimeout(() => {
         setCurrentStepState(step);
@@ -51,6 +62,7 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
   const startOnborda = useCallback((tourName: string) => {
     setCurrentTour(tourName);
     setCurrentStepState(0);
+    setCurrentTourSteps(tours.find((tour) => tour.tour === tourName)?.steps || []);
     setOnbordaVisible(true);
   }, []);
 
@@ -59,6 +71,7 @@ const OnbordaProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         currentTour,
         currentStep,
+        currentTourSteps,
         setCurrentStep,
         closeOnborda,
         startOnborda,

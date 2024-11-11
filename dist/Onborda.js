@@ -11,9 +11,8 @@ import { getCardStyle, getArrowStyle } from "./OnbordaStyles";
  * @param {OnbordaProps} props
  * @constructor
  */
-const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, tourComponent: TourComponent, debug = false, observerTimeout = 5000, }) => {
-    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible } = useOnborda();
-    const currentTourSteps = steps.find((tour) => tour.tour === currentTour)?.steps;
+const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, tourComponent: TourComponent, debug = false, observerTimeout = 5000, }) => {
+    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps } = useOnborda();
     const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
@@ -58,9 +57,10 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                     currentElementRef.current = null;
                 }
                 // Prefetch the next route
-                if (step?.nextRoute) {
-                    debug && console.log("Onborda: Prefetching Next Route", step.nextRoute);
-                    router.prefetch(step.nextRoute);
+                const nextStep = currentTourSteps[currentStep + 1];
+                if (nextStep && nextStep?.route) {
+                    debug && console.log("Onborda: Prefetching Next Route", nextStep.route);
+                    router.prefetch(nextStep.route);
                 }
             }
         }
@@ -162,7 +162,7 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
         if (currentTourSteps && currentStep < currentTourSteps.length - 1) {
             try {
                 const nextStepIndex = currentStep + 1;
-                const route = currentTourSteps[currentStep].nextRoute;
+                const route = currentTourSteps[nextStepIndex].route;
                 if (route) {
                     // Trigger the next route
                     await router.push(route);
@@ -218,7 +218,7 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
         if (currentTourSteps && currentStep > 0) {
             try {
                 const prevStepIndex = currentStep - 1;
-                const route = currentTourSteps[currentStep].prevRoute;
+                const route = currentTourSteps[prevStepIndex].route;
                 if (route) {
                     // Trigger the previous route
                     await router.push(route);
@@ -271,6 +271,62 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
             }
         }
     };
+    const setStep = async (step) => {
+        if (currentTourSteps) {
+            try {
+                const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
+                const route = currentTourSteps[setStepIndex].route;
+                if (route) {
+                    // Trigger the next route
+                    await router.push(route);
+                    // Use MutationObserver to detect when the target element is available in the DOM
+                    const observer = new MutationObserver((mutations, observer) => {
+                        const shouldSelect = hasSelector(currentTourSteps[setStepIndex]);
+                        if (shouldSelect) {
+                            const element = getStepSelectorElement(currentTourSteps[setStepIndex]);
+                            if (element) {
+                                // Once the element is found, update the step and scroll to the element
+                                setCurrentStep(setStepIndex);
+                                // Stop observing after the element is found
+                                observer.disconnect();
+                            }
+                            else {
+                                debug && console.log("Onborda: Observing for element...", currentTourSteps[setStepIndex]);
+                            }
+                        }
+                        else {
+                            console.log("Onborda: No selector set for next step while observing", currentTourSteps[setStepIndex]);
+                            setCurrentStep(setStepIndex);
+                            observer.disconnect();
+                        }
+                    });
+                    // Start observing the document body for changes
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                    });
+                    // Set a timeout to disconnect the observer if the element is not found within a certain period
+                    const timeoutId = setTimeout(() => {
+                        observer.disconnect();
+                        console.error("Onborda: Element not found within the timeout period");
+                    }, observerTimeout); // Adjust the timeout period as needed
+                    // Clear the timeout if the observer disconnects successfully
+                    const originalDisconnect = observer.disconnect.bind(observer);
+                    observer.disconnect = () => {
+                        clearTimeout(timeoutId);
+                        originalDisconnect();
+                    };
+                }
+                else {
+                    // If no route is set, update the step instantly
+                    setCurrentStep(setStepIndex);
+                }
+            }
+            catch (error) {
+                console.error("Error navigating to next route", error);
+            }
+        }
+    };
     // - -
     // Card Arrow
     const CardArrow = ({ isVisible }) => {
@@ -308,6 +364,6 @@ const Onborda = ({ children, steps, shadowRgb = "0, 0, 0", shadowOpacity = "0.2"
                                     width: pointerPosition.width + pointerPadding,
                                     height: pointerPosition.height + pointerPadding,
                                 }
-                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), canProceed: canProceed }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep }) }) }))] }))] }));
+                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), canProceed: canProceed }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep, setStep: setStep }) }) }))] }))] }));
 };
 export default Onborda;
