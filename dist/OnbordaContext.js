@@ -17,10 +17,10 @@ const useOnborda = () => {
     return context;
 };
 const OnbordaProvider = ({ children, tours = [], }) => {
-    const [currentTour, setCurrentTour] = useState(null);
+    const [currentTour, setCurrentTourState] = useState(null);
     const [currentStep, setCurrentStepState] = useState(0);
     const [isOnbordaVisible, setOnbordaVisible] = useState(false);
-    const [currentTourSteps, setCurrentTourSteps] = useState([]);
+    const [currentTourSteps, setCurrentTourStepsState] = useState([]);
     const [completedSteps, setCompletedSteps] = useState(new Set());
     const setCurrentStep = useCallback((step, delay) => {
         // If step is a string, find the index of the step with that id
@@ -44,15 +44,42 @@ const OnbordaProvider = ({ children, tours = [], }) => {
     }, []);
     const closeOnborda = useCallback(() => {
         setOnbordaVisible(false);
-        setCurrentTour(null);
+        setCurrentTourState(null);
+        setCurrentTourStepsState([]);
+        setCurrentStepState(0);
+        setCompletedSteps(new Set());
     }, []);
+    const initializeCompletedSteps = useCallback(async (tourSteps) => {
+        return Promise.all(tourSteps.map(async (step) => {
+            return step.initialCompletedState ? step.initialCompletedState() : false;
+        })).then((results) => {
+            const firstIncomplete = results.findIndex((result) => !result);
+            const completed = results.reduce((acc, result, index) => {
+                if (result) {
+                    acc.push(tourSteps[index]?.id || index);
+                }
+                return acc;
+            }, []);
+            setCompletedSteps(new Set(completed));
+            return firstIncomplete;
+        });
+    }, []);
+    const setCurrentTour = useCallback((tourName) => {
+        if (!tourName) {
+            closeOnborda();
+            return;
+        }
+        setCurrentTourState(tourName);
+        const tourSteps = tours.find((tour) => tour.tour === tourName)?.steps || [];
+        setCurrentTourStepsState(tourSteps);
+        initializeCompletedSteps(tourSteps).then(r => {
+            setCurrentStep(r);
+            setOnbordaVisible(true);
+        });
+    }, [tours]);
     const startOnborda = useCallback((tourName) => {
         setCurrentTour(tourName);
-        setCurrentStepState(0);
-        setCurrentTourSteps(tours.find((tour) => tour.tour === tourName)?.steps || []);
-        setCompletedSteps(new Set([...(tours.find((tour) => tour.tour === tourName)?.completedSteps || [])]));
-        setOnbordaVisible(true);
-    }, []);
+    }, [setCurrentTour]);
     return (_jsx(OnbordaContext.Provider, { value: {
             currentTour,
             currentStep,

@@ -34,6 +34,7 @@ const Onborda: React.FC<OnbordaProps> = ({
         height: number;
     } | null>(null);
     const currentElementRef = useRef<Element | null>(null);
+    const [currentRoute, setCurrentRoute] = useState<string | null>(null);
     const offset = 20;
 
     const hasSelector = (step: Step): boolean => {
@@ -54,20 +55,101 @@ const Onborda: React.FC<OnbordaProps> = ({
             debug && console.log("Onborda: Current Step Changed");
             const step = currentTourSteps[currentStep];
             if (step) {
-                const element = getStepSelectorElement(step)
-                if (element) {
-                    setPointerPosition(getElementPosition(element));
-                    setElementToScroll(element);
-                    currentElementRef.current = element;
+                let elementFound = false;
+                // Check if the step has a selector
+                if (hasSelector(step)) {
+                    // This step has a selector. Lets find the element
+                    const element = getStepSelectorElement(step)
+                    // Check if the element is found
+                    if (element) {
+                        // Once the element is found, update the step and scroll to the element
+                        setPointerPosition(getElementPosition(element));
+                        setElementToScroll(element);
+                        currentElementRef.current = element;
 
-                    // Enable pointer events on the element
-                    if (step.interactable) {
-                        const htmlElement = element as HTMLElement;
-                        htmlElement.style.pointerEvents = "auto";
+                        // Enable pointer events on the element
+                        if (step.interactable) {
+                            const htmlElement = element as HTMLElement;
+                            htmlElement.style.pointerEvents = "auto";
+                        }
+                        elementFound = true;
                     }
+                    // Even if the element is already found, we still need to check if the route is different from the current route
+                    // do we have a route to navigate to?
+                    if (step.route) {
+                        // Check if the route is set and different from the current route
+                        if (currentRoute == null || currentRoute !== step.route) {
+                            debug && console.log("Onborda: Navigating to route", step.route);
+                            setCurrentRoute(step.route);
+                            // Trigger the next route
+                            router.push(step.route);
 
-                } else {
-                    // if the element is not found, place the pointer at the center of the screen
+                            // Use MutationObserver to detect when the target element is available in the DOM
+                            const observer = new MutationObserver((mutations, observer) => {
+                                const shouldSelect = hasSelector(currentTourSteps[currentStep]);
+                                if (shouldSelect) {
+                                    const element = getStepSelectorElement(currentTourSteps[currentStep]);
+                                    if (element) {
+                                        // Once the element is found, update the step and scroll to the element
+                                        setPointerPosition(getElementPosition(element));
+                                        setElementToScroll(element);
+                                        currentElementRef.current = element;
+
+                                        // Enable pointer events on the element
+                                        if (step.interactable) {
+                                            const htmlElement = element as HTMLElement;
+                                            htmlElement.style.pointerEvents = "auto";
+                                        }
+
+                                        // Stop observing after the element is found
+                                        observer.disconnect();
+                                    } else {
+                                        debug && console.log("Onborda: Observing for element...", currentTourSteps[currentStep]);
+                                    }
+                                } else {
+                                    debug && console.log("Onborda: No selector set for next step while observing", currentTourSteps[currentStep]);
+                                    setCurrentStep(currentStep);
+                                    observer.disconnect();
+                                }
+                            });
+
+                            // Start observing the document body for changes
+                            observer.observe(document.body, {
+                                childList: true,
+                                subtree: true,
+                            });
+
+                            // Set a timeout to disconnect the observer if the element is not found within a certain period
+                            const timeoutId = setTimeout(() => {
+                                observer.disconnect();
+                                console.error("Onborda: Element not found within the timeout period");
+                            }, observerTimeout); // Adjust the timeout period as needed
+
+                            // Clear the timeout if the observer disconnects successfully
+                            const originalDisconnect = observer.disconnect.bind(observer);
+                            observer.disconnect = () => {
+                                clearTimeout(timeoutId);
+                                originalDisconnect();
+                            };
+                        } else if (!elementFound) {
+                            console.error("Onborda: Element not found on same route", currentTourSteps[currentStep]);
+                        }
+                    }
+                }else {
+                    // no selector, but might still need to navigate to a route
+                    if (step.route) {
+                        // Check if the route is set and different from the current route
+                        if (currentRoute == null || currentRoute !== step.route) {
+                            debug && console.log("Onborda: Navigating to route", step.route);
+                            setCurrentRoute(step.route);
+                            // Trigger the next route
+                            router.push(step.route);
+                        }
+                    }
+                }
+
+                // No element set for this step? Place the pointer at the center of the screen
+                if (!elementFound) {
                     setPointerPosition({
                         x: window.innerWidth / 2,
                         y: window.innerHeight / 2,
@@ -77,6 +159,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                     setElementToScroll(null);
                     currentElementRef.current = null;
                 }
+
                 // Prefetch the next route
                 const nextStep = currentTourSteps[currentStep + 1];
                 if (nextStep && nextStep?.route) {
@@ -96,32 +179,38 @@ const Onborda: React.FC<OnbordaProps> = ({
 
     // Update the canProceed state based on the nextStepConditions
     useEffect(() => {
-        const step = currentTourSteps?.[currentStep];
-        const element = step ? getStepSelectorElement(step) : null;
+        if (isOnbordaVisible && currentTourSteps) {
+            const step = currentTourSteps?.[currentStep];
+            const element = step ? getStepSelectorElement(step) : null;
 
-        if (element && step?.isCompleteConditions) {
-            const handleInteraction = () => {
-                if (step?.isCompleteConditions?.(element) ?? true) {
-                    setCompletedSteps((prev) => {return prev.add(step?.id ?? currentStep);});
-                }
-            };
-            // Initial check
-            handleInteraction();
+            if (element && step?.isCompleteConditions) {
+                const handleInteraction = () => {
+                    if (step?.isCompleteConditions?.(element) ?? true) {
+                        setCompletedSteps((prev) => {
+                            return prev.add(step?.id ?? currentStep);
+                        });
+                    }
+                };
+                // Initial check
+                handleInteraction();
 
-            element.addEventListener("click", handleInteraction);
-            element.addEventListener("input", handleInteraction);
-            element.addEventListener("change", handleInteraction);
+                element.addEventListener("click", handleInteraction);
+                element.addEventListener("input", handleInteraction);
+                element.addEventListener("change", handleInteraction);
 
-            return () => {
-                // Cleanup the event listeners
-                element.removeEventListener("click", handleInteraction);
-                element.removeEventListener("input", handleInteraction);
-                element.removeEventListener("change", handleInteraction);
-            };
-        }else {
-            setCompletedSteps((prev) => {return prev.add(step?.id ?? currentStep);});
+                return () => {
+                    // Cleanup the event listeners
+                    element.removeEventListener("click", handleInteraction);
+                    element.removeEventListener("input", handleInteraction);
+                    element.removeEventListener("change", handleInteraction);
+                };
+            } else {
+                setCompletedSteps((prev) => {
+                    return prev.add(step?.id ?? currentStep);
+                });
+            }
         }
-    }, [currentStep, currentTourSteps]);
+    }, [currentStep, currentTourSteps, isOnbordaVisible]);
 
     // - -
     // Helper function to get element position
@@ -188,190 +277,18 @@ const Onborda: React.FC<OnbordaProps> = ({
     // - -
     // Step Controls
     const nextStep = async () => {
-        if (currentTourSteps && currentStep < currentTourSteps.length - 1) {
-            try {
-                const nextStepIndex = currentStep + 1;
-                const route = currentTourSteps[nextStepIndex].route;
-
-                // Check if the route is set and different from the current route
-                if (route && currentTourSteps[currentStep].route !== route) {
-
-                    // Trigger the next route
-                    await router.push(route);
-
-
-                    // Use MutationObserver to detect when the target element is available in the DOM
-                    const observer = new MutationObserver((mutations, observer) => {
-                        const shouldSelect = hasSelector(currentTourSteps[nextStepIndex]);
-                        if (shouldSelect) {
-                            const element = getStepSelectorElement(currentTourSteps[nextStepIndex]);
-                            if (element) {
-                                // Once the element is found, update the step and scroll to the element
-                                setCurrentStep(nextStepIndex);
-
-                                // Stop observing after the element is found
-                                observer.disconnect();
-                            } else {
-                                debug && console.log("Onborda: Observing for element...", currentTourSteps[nextStepIndex]);
-                            }
-                        } else {
-                            console.log("Onborda: No selector set for next step while observing", currentTourSteps[nextStepIndex]);
-                            setCurrentStep(nextStepIndex);
-                            observer.disconnect();
-                        }
-                    });
-
-                    // Start observing the document body for changes
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true,
-                    });
-
-                    // Set a timeout to disconnect the observer if the element is not found within a certain period
-                    const timeoutId = setTimeout(() => {
-                        observer.disconnect();
-                        console.error("Onborda: Element not found within the timeout period");
-                    }, observerTimeout); // Adjust the timeout period as needed
-
-                    // Clear the timeout if the observer disconnects successfully
-                    const originalDisconnect = observer.disconnect.bind(observer);
-                    observer.disconnect = () => {
-                        clearTimeout(timeoutId);
-                        originalDisconnect();
-                    };
-
-                } else {
-                    // If no route is set, update the step instantly
-                    setCurrentStep(nextStepIndex);
-                }
-            } catch (error) {
-                console.error("Error navigating to next route", error);
-            }
-        }
+        const nextStepIndex = currentStep + 1;
+        await setStep(nextStepIndex);
     };
 
     const prevStep = async () => {
-        if (currentTourSteps && currentStep > 0) {
-            try {
-                const prevStepIndex = currentStep - 1;
-                const route = currentTourSteps[prevStepIndex].route;
-
-                // Check if the route is set and different from the current route
-                if (route && currentTourSteps[currentStep].route !== route) {
-
-                    // Trigger the previous route
-                    await router.push(route);
-
-                    // Use MutationObserver to detect when the target element is available in the DOM
-                    const observer = new MutationObserver((mutations, observer) => {
-                        const shouldSelect = hasSelector(currentTourSteps[prevStepIndex]);
-                        if (shouldSelect) {
-                            const element = getStepSelectorElement(currentTourSteps[prevStepIndex]);
-                            if (element) {
-                                // Once the element is found, update the step and scroll to the element
-                                setCurrentStep(prevStepIndex);
-
-                                // Stop observing after the element is found
-                                observer.disconnect();
-                            } else {
-                                // Continue observing until the element is found
-                                debug && console.log("Onborda: Observing for element...", currentTourSteps[prevStepIndex]);
-                            }
-                        } else {
-                            debug && console.log("Onborda: No selector set for previous step while observing", currentTourSteps[prevStepIndex]);
-                            setCurrentStep(prevStepIndex);
-                            observer.disconnect();
-                        }
-                    });
-
-                    // Start observing the document body for changes
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true,
-                    });
-
-                    // Set a timeout to disconnect the observer if the element is not found within a certain period
-                    const timeoutId = setTimeout(() => {
-                        observer.disconnect();
-                        console.error("Onborda: Element not found within the timeout period");
-                    }, observerTimeout); // Adjust the timeout period as needed
-
-                    // Clear the timeout if the observer disconnects successfully
-                    const originalDisconnect = observer.disconnect.bind(observer);
-                    observer.disconnect = () => {
-                        clearTimeout(timeoutId);
-                        originalDisconnect();
-                    };
-
-                } else {
-                    // If no route is set, update the step instantly
-                    setCurrentStep(prevStepIndex);
-                }
-            } catch (error) {
-                console.error("Error navigating to previous route", error);
-            }
-        }
+        const prevStepIndex = currentStep - 1;
+        await setStep(prevStepIndex);
     };
 
     const setStep = async (step: number | string) => {
-        if (currentTourSteps){
-            try {
-                const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
-                const route = currentTourSteps[setStepIndex].route;
-
-                // Check if the route is set and different from the current route
-                if (route && currentTourSteps[currentStep].route !== route) {
-                    // Trigger the next route
-                    await router.push(route);
-
-                    // Use MutationObserver to detect when the target element is available in the DOM
-                    const observer = new MutationObserver((mutations, observer) => {
-                        const shouldSelect = hasSelector(currentTourSteps[setStepIndex]);
-                        if (shouldSelect) {
-                            const element = getStepSelectorElement(currentTourSteps[setStepIndex]);
-                            if (element) {
-                                // Once the element is found, update the step and scroll to the element
-                                setCurrentStep(setStepIndex);
-
-                                // Stop observing after the element is found
-                                observer.disconnect();
-                            } else {
-                                debug && console.log("Onborda: Observing for element...", currentTourSteps[setStepIndex]);
-                            }
-                        } else {
-                            console.log("Onborda: No selector set for next step while observing", currentTourSteps[setStepIndex]);
-                            setCurrentStep(setStepIndex);
-                            observer.disconnect();
-                        }
-                    });
-
-                    // Start observing the document body for changes
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true,
-                    });
-
-                    // Set a timeout to disconnect the observer if the element is not found within a certain period
-                    const timeoutId = setTimeout(() => {
-                        observer.disconnect();
-                        console.error("Onborda: Element not found within the timeout period");
-                    }, observerTimeout); // Adjust the timeout period as needed
-
-                    // Clear the timeout if the observer disconnects successfully
-                    const originalDisconnect = observer.disconnect.bind(observer);
-                    observer.disconnect = () => {
-                        clearTimeout(timeoutId);
-                        originalDisconnect();
-                    };
-
-                } else {
-                    // If no route is set, update the step instantly
-                    setCurrentStep(setStepIndex);
-                }
-            } catch (error) {
-                console.error("Error navigating to next route", error);
-            }
-        }
+        const setStepIndex = typeof step === 'string' ? currentTourSteps.findIndex((s) => s?.id === step) : step;
+        setCurrentStep(setStepIndex);
     }
 
 

@@ -50,6 +50,8 @@ export interface Step {
     interactable?: boolean;
     /** Conditions to be met before the next step can be triggered. Function is bound to event listeners on the target element on 'input', 'change' and 'click' events. */
     isCompleteConditions?: (element: Element | null) => boolean;
+    /** Initial completed state of the step. an async function called on tour started.*/
+    initialCompletedState?: () => Promise<boolean>;
     /** The route for this step */
     route?: string;
     /** The route to navigate to for the next step */
