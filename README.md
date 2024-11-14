@@ -163,7 +163,8 @@ export const CustomTourComponent = ({
 | `interactable`         | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                     |
 | `initialCompletedState`| `() => Promise<boolean>`                 | Optional. A client function that returns a promise that resolves to a boolean. If true, the step is marked as completed. Called via a `Promise.all()` on each step of a tour when started.      |
 
-> **Notice**: The `nextRoute` and `prevRoute` properties have been deprecated. Please use the `route` property instead.
+> [!IMPORTANT]
+> The `nextRoute` and `prevRoute` properties have been deprecated. Please use the `route` property instead.
 ```tsx
 {
     icon: <>👋</>,
@@ -271,7 +272,8 @@ export const CustomTourComponent = ({
 | `debug`            | `boolean`            | Optional. Console logs the current step and the target element. Defaults to `false`.                                                                                                                                                                                                |
 | `observerTimeout`  | `number`             | Optional. The timeout in milliseconds for the observer to wait for the target element to be available. Defaults to `5000`. Observer is used to wait for the target element to be available before proceeding to the next step e.g. when the target element is on a different route. |
 
-> **Notice**: The `steps` property has been deprecated. Please use the `OnbordaProvider.tours` property instead.
+> [!IMPORTANT]
+> The `steps` property has been deprecated. Please use the `OnbordaProvider.tours` property instead.
 
 ```tsx
 <Onborda
