@@ -158,11 +158,12 @@ export const CustomTourComponent = ({
 | `pointerPadding`       | `number`                                 | Optional. The padding around the pointer (keyhole) highlighting the target element.                                                                                                             |
 | `pointerRadius`        | `number`                                 | Optional. The border-radius of the pointer (keyhole) highlighting the target element.                                                                                                           |
 | <del>`nextRoute`</del> | <del>`string`</del>                      | **Deprecated**.  Optional. The route to navigate to using `next/navigation` when moving to the next step.                                                                                       |
-| <del>`prevRoute`</del> | <del>`string`>/del>                      | **Deprecated**.  Optional. The route to navigate to using `next/navigation` when moving to the previous step.                                                                                   |
+| <del>`prevRoute`</del> | <del>`string`</del>                      | **Deprecated**.  Optional. The route to navigate to using `next/navigation` when moving to the previous step.                                                                                   |
 | `route`                | `string`                                 | Optional. The route to navigate to using `next/navigation` when this step is set.                                                                                                               |
 | `interactable`         | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                     |
 | `initialCompletedState`| `() => Promise<boolean>`                 | Optional. A client function that returns a promise that resolves to a boolean. If true, the step is marked as completed. Called via a `Promise.all()` on each step of a tour when started.      |
 
+> **Notice**: The `nextRoute` and `prevRoute` properties have been deprecated. Please use the `route` property instead.
 ```tsx
 {
     icon: <>👋</>,
