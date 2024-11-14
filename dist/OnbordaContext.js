@@ -1,6 +1,6 @@
 "use client";
 import { jsx as _jsx } from "react/jsx-runtime";
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 // Example Hooks Usage:
 // const { setCurrentStep, closeOnborda, startOnborda } = useOnborda();
 // // To trigger a specific step
@@ -16,12 +16,18 @@ const useOnborda = () => {
     }
     return context;
 };
-const OnbordaProvider = ({ children, tours = [], }) => {
+const OnbordaProvider = ({ children, tours = [], activeTour = null, }) => {
     const [currentTour, setCurrentTourState] = useState(null);
     const [currentStep, setCurrentStepState] = useState(0);
     const [isOnbordaVisible, setOnbordaVisible] = useState(false);
     const [currentTourSteps, setCurrentTourStepsState] = useState([]);
     const [completedSteps, setCompletedSteps] = useState(new Set());
+    // Start the active tour on mount
+    useEffect(() => {
+        if (activeTour) {
+            startOnborda(activeTour);
+        }
+    }, [activeTour]);
     const setCurrentStep = useCallback((step, delay) => {
         // If step is a string, find the index of the step with that id
         if (typeof step === 'string') {

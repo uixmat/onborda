@@ -4,6 +4,8 @@ export interface OnbordaProviderProps {
     children: React.ReactNode;
     /** An array of tours, each containing multiple steps */
     tours: Tour[];
+    /** Active Tour */
+    activeTour?: string;
 }
 export interface OnbordaContextType {
     /** current step index */

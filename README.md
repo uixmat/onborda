@@ -246,10 +246,11 @@ export const CustomTourComponent = ({
 ]
 ```
 ### OnbordaProvider Props
-| Property           | Type                 | Description                                                                                                                                                                                                                                                                         |
-|--------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `children`         | `React.ReactNode`    | Your website or application content.                                                                                                                                                                                                                                                |
-| `tours`            | `Tour[]`             | An array of `Tour` objects defining each tour of the onboarding process.                                                                                                                                                                                                            |
+| Property           | Type                 | Description                                                                      |
+|--------------------|----------------------|----------------------------------------------------------------------------------|
+| `children`         | `React.ReactNode`    | Your website or application content.                                             |
+| `tours`            | `Tour[]`             | An array of `Tour` objects defining each tour of the onboarding process.         |
+| `activeTour`       | `string`             | Optional. The name of the active tour. If set, Onborda will start automatically. |
 
 ```tsx
 <OnbordaProvider tours={tours}>

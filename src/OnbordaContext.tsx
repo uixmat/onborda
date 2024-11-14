@@ -27,12 +27,20 @@ const useOnborda = () => {
 const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
   children,
   tours = [],
+  activeTour = null,
 }) => {
   const [currentTour, setCurrentTourState] = useState<string | null>(null);
   const [currentStep, setCurrentStepState] = useState(0);
   const [isOnbordaVisible, setOnbordaVisible] = useState(false);
   const [currentTourSteps, setCurrentTourStepsState] = useState<Step[]>([]);
   const [completedSteps, setCompletedSteps] = useState<Set<number|string>>(new Set());
+
+   // Start the active tour on mount
+    useEffect(() => {
+        if (activeTour) {
+            startOnborda(activeTour);
+        }
+    }, [activeTour]);
 
   const setCurrentStep = useCallback((step: number | string, delay?: number) => {
     // If step is a string, find the index of the step with that id
