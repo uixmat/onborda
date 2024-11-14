@@ -81,8 +81,6 @@ export interface Tour {
     tour: string;
     /** An array of steps in the tour */
     steps: Step[];
-    /** Default completed steps */
-    completedSteps?: (string|number)[];
 }
 
 // Onborda

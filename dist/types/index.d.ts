@@ -66,8 +66,6 @@ export interface Tour {
     tour: string;
     /** An array of steps in the tour */
     steps: Step[];
-    /** Default completed steps */
-    completedSteps?: (string | number)[];
 }
 export interface OnbordaProps {
     /** The children elements to be rendered inside the Onborda component */
