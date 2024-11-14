@@ -175,8 +175,7 @@ export const CustomTourComponent = ({
     showControls: true,
     pointerPadding: 10,
     pointerRadius: 10,
-    nextRoute: "/foo",
-    prevRoute: "/bar"
+    route: "/foo"
 }
 ```
 
