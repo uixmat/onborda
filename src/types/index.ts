@@ -74,6 +74,10 @@ export interface Step {
     /** @deprecated Use `route` instead */
     prevRoute?: string;
 
+    // Callbacks
+    /** Callback function to be called when the step is completed */
+    onComplete?: () => Promise<void>;
+
 }
 
 // Tour
@@ -83,6 +87,8 @@ export interface Tour {
     tour: string;
     /** An array of steps in the tour */
     steps: Step[];
+    /** Complete Callback */
+    onComplete?: () => void;
 }
 
 // Onborda

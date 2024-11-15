@@ -49,12 +49,17 @@ const OnbordaProvider = ({ children, tours = [], activeTour = null, }) => {
         }
     }, []);
     const closeOnborda = useCallback(() => {
+        // If all steps are completed, call the onComplete function
+        console.log(completedSteps.size, currentTourSteps.length);
+        if (completedSteps.size === currentTourSteps.length) {
+            tours.find((tour) => tour.tour === currentTour)?.onComplete?.();
+        }
         setOnbordaVisible(false);
         setCurrentTourState(null);
         setCurrentTourStepsState([]);
         setCurrentStepState(0);
         setCompletedSteps(new Set());
-    }, []);
+    }, [currentTour, currentTourSteps, completedSteps]);
     const initializeCompletedSteps = useCallback(async (tourSteps) => {
         return Promise.all(tourSteps.map(async (step) => {
             return step.initialCompletedState ? step.initialCompletedState() : false;
@@ -67,7 +72,8 @@ const OnbordaProvider = ({ children, tours = [], activeTour = null, }) => {
                 return acc;
             }, []);
             setCompletedSteps(new Set(completed));
-            return firstIncomplete;
+            // If all steps are completed, return the last step
+            return firstIncomplete === -1 ? tourSteps.length - 1 : firstIncomplete;
         });
     }, []);
     const setCurrentTour = useCallback((tourName) => {

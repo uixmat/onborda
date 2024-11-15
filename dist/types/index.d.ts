@@ -62,12 +62,16 @@ export interface Step {
     /** The route to navigate to for the previous step */
     /** @deprecated Use `route` instead */
     prevRoute?: string;
+    /** Callback function to be called when the step is completed */
+    onComplete?: () => Promise<void>;
 }
 export interface Tour {
     /** The name of the tour */
     tour: string;
     /** An array of steps in the tour */
     steps: Step[];
+    /** Complete Callback */
+    onComplete?: () => void;
 }
 export interface OnbordaProps {
     /** The children elements to be rendered inside the Onborda component */

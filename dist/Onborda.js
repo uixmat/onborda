@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useEffect, useRef, useState } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Portal } from "@radix-ui/react-portal";
 import { getCardStyle, getArrowStyle } from "./OnbordaStyles";
 /**
@@ -17,7 +17,6 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
     const [currentRoute, setCurrentRoute] = useState(null);
-    const offset = 20;
     const hasSelector = (step) => {
         return !!step?.selector || !!step?.customQuerySelector;
     };
@@ -27,11 +26,17 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
     // - -
     // Route Changes
     const router = useRouter();
+    const path = usePathname();
+    // Update the current route on route changes
+    useEffect(() => {
+        setCurrentRoute(path);
+    }, [path]);
     // - -
     // Initialisze
     useEffect(() => {
+        let cleanup = [];
         if (isOnbordaVisible && currentTourSteps) {
-            debug && console.log("Onborda: Current Step Changed");
+            debug && console.log("Onborda: Current Step Changed", currentStep);
             const step = currentTourSteps[currentStep];
             if (step) {
                 let elementFound = false;
@@ -45,10 +50,46 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                         setPointerPosition(getElementPosition(element));
                         setElementToScroll(element);
                         currentElementRef.current = element;
+                        // Function to mark the step as completed if the conditions are met
+                        const handleInteraction = () => {
+                            const isComplete = step?.isCompleteConditions?.(element) ?? true;
+                            // Check if the step is complete based on the conditions, and not already marked as completed
+                            if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                debug && console.log("Onborda: Step Completed", step);
+                                setCompletedSteps((prev) => {
+                                    return prev.add(step?.id ?? currentStep);
+                                });
+                                // If callback is provided, call it
+                                step?.onComplete && step.onComplete();
+                            } // Check if the step is incomplete based on the conditions, and already marked as completed
+                            else if (!isComplete && Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                debug && console.log("Onborda: Step Incomplete", step);
+                                setCompletedSteps((prev) => {
+                                    prev.delete(step?.id ?? currentStep);
+                                    return prev;
+                                });
+                            }
+                        };
+                        // Initial check
+                        handleInteraction();
                         // Enable pointer events on the element
                         if (step.interactable) {
                             const htmlElement = element;
                             htmlElement.style.pointerEvents = "auto";
+                            // Add event listeners if the step is interactable and has conditions
+                            if (step?.isCompleteConditions) {
+                                element.addEventListener("click", handleInteraction);
+                                element.addEventListener("input", handleInteraction);
+                                element.addEventListener("change", handleInteraction);
+                                debug && console.log("Onborda: Added event listeners for element", element);
+                                cleanup.push(() => {
+                                    // Cleanup the event listeners
+                                    element.removeEventListener("click", handleInteraction);
+                                    element.removeEventListener("input", handleInteraction);
+                                    element.removeEventListener("change", handleInteraction);
+                                    debug && console.log("Onborda: Removed event listeners for element", element);
+                                });
+                            }
                         }
                         elementFound = true;
                     }
@@ -56,9 +97,8 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                     // do we have a route to navigate to?
                     if (step.route) {
                         // Check if the route is set and different from the current route
-                        if (currentRoute == null || currentRoute !== step.route) {
+                        if (currentRoute == null || !currentRoute?.endsWith(step.route)) {
                             debug && console.log("Onborda: Navigating to route", step.route);
-                            setCurrentRoute(step.route);
                             // Trigger the next route
                             router.push(step.route);
                             // Use MutationObserver to detect when the target element is available in the DOM
@@ -78,15 +118,16 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                         }
                                         // Stop observing after the element is found
                                         observer.disconnect();
+                                        debug && console.log("Onborda: Observer disconnected after element found", element);
                                     }
                                     else {
                                         debug && console.log("Onborda: Observing for element...", currentTourSteps[currentStep]);
                                     }
                                 }
                                 else {
-                                    debug && console.log("Onborda: No selector set for next step while observing", currentTourSteps[currentStep]);
                                     setCurrentStep(currentStep);
                                     observer.disconnect();
+                                    debug && console.log("Onborda: Observer disconnected after no selector set", currentTourSteps[currentStep]);
                                 }
                             });
                             // Start observing the document body for changes
@@ -97,7 +138,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                             // Set a timeout to disconnect the observer if the element is not found within a certain period
                             const timeoutId = setTimeout(() => {
                                 observer.disconnect();
-                                console.error("Onborda: Element not found within the timeout period");
+                                console.error("Onborda: Observer Timeout", currentTourSteps[currentStep]);
                             }, observerTimeout); // Adjust the timeout period as needed
                             // Clear the timeout if the observer disconnects successfully
                             const originalDisconnect = observer.disconnect.bind(observer);
@@ -106,21 +147,31 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                 originalDisconnect();
                             };
                         }
-                        else if (!elementFound) {
-                            console.error("Onborda: Element not found on same route", currentTourSteps[currentStep]);
-                        }
                     }
                 }
                 else {
                     // no selector, but might still need to navigate to a route
                     if (step.route) {
                         // Check if the route is set and different from the current route
-                        if (currentRoute == null || currentRoute !== step.route) {
+                        if (currentRoute == null || !currentRoute?.endsWith(step.route)) {
                             debug && console.log("Onborda: Navigating to route", step.route);
-                            setCurrentRoute(step.route);
                             // Trigger the next route
                             router.push(step.route);
                         }
+                        else {
+                            // Mark the step as completed
+                            step?.onComplete && step.onComplete();
+                            setCompletedSteps((prev) => {
+                                return prev.add(step?.id ?? currentStep);
+                            });
+                        }
+                    }
+                    else {
+                        // Mark the step as completed
+                        step?.onComplete && step.onComplete();
+                        setCompletedSteps((prev) => {
+                            return prev.add(step?.id ?? currentStep);
+                        });
                     }
                 }
                 // No element set for this step? Place the pointer at the center of the screen
@@ -148,40 +199,15 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                 const htmlElement = currentElementRef.current;
                 htmlElement.style.pointerEvents = "";
             }
+            // Cleanup any event listeners we may have added
+            cleanup.forEach(fn => fn());
         };
-    }, [currentStep, currentTourSteps, offset, isOnbordaVisible]);
-    // Update the canProceed state based on the nextStepConditions
-    useEffect(() => {
-        if (isOnbordaVisible && currentTourSteps) {
-            const step = currentTourSteps?.[currentStep];
-            const element = step ? getStepSelectorElement(step) : null;
-            if (element && step?.isCompleteConditions) {
-                const handleInteraction = () => {
-                    if (step?.isCompleteConditions?.(element) ?? true) {
-                        setCompletedSteps((prev) => {
-                            return prev.add(step?.id ?? currentStep);
-                        });
-                    }
-                };
-                // Initial check
-                handleInteraction();
-                element.addEventListener("click", handleInteraction);
-                element.addEventListener("input", handleInteraction);
-                element.addEventListener("change", handleInteraction);
-                return () => {
-                    // Cleanup the event listeners
-                    element.removeEventListener("click", handleInteraction);
-                    element.removeEventListener("input", handleInteraction);
-                    element.removeEventListener("change", handleInteraction);
-                };
-            }
-            else {
-                setCompletedSteps((prev) => {
-                    return prev.add(step?.id ?? currentStep);
-                });
-            }
-        }
-    }, [currentStep, currentTourSteps, isOnbordaVisible]);
+    }, [
+        currentStep, // Re-run the effect when the current step changes
+        currentTourSteps, // Re-run the effect when the current tour steps change
+        isOnbordaVisible, // Re-run the effect when the onborda visibility changes
+        currentRoute, // Re-run the effect when the current route changes
+    ]);
     // - -
     // Helper function to get element position
     const getElementPosition = (element) => {

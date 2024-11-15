@@ -63,12 +63,17 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
   }, []);
 
   const closeOnborda = useCallback(() => {
+    // If all steps are completed, call the onComplete function
+      console.log(completedSteps.size, currentTourSteps.length)
+    if (completedSteps.size === currentTourSteps.length) {
+        tours.find((tour) => tour.tour === currentTour)?.onComplete?.();
+    }
     setOnbordaVisible(false);
     setCurrentTourState(null);
     setCurrentTourStepsState([]);
     setCurrentStepState(0);
     setCompletedSteps(new Set());
-  }, []);
+  }, [currentTour, currentTourSteps, completedSteps]);
 
 
     const initializeCompletedSteps = useCallback(async (tourSteps: Step[]) => {
@@ -83,7 +88,8 @@ const OnbordaProvider: React.FC<OnbordaProviderProps> = ({
                 return acc;
             }, []);
             setCompletedSteps(new Set<string | number>(completed));
-            return firstIncomplete;
+            // If all steps are completed, return the last step
+            return firstIncomplete === -1 ? tourSteps.length - 1 : firstIncomplete;
         });
     },[]);
 
