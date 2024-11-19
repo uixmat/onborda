@@ -78,7 +78,7 @@ export const CustomCardComponent = ({
       <h2>{currentStep} of {totalSteps}</h2>
       <p>{step.content}</p>
       <button onClick={prevStep}>Previous</button>
-      <button onClick={nextStep} disabled={canPoceed}>Next</button>
+      <button onClick={nextStep}>Next</button>
       <button onClick={() => setStep(0)}>Restart</button>
       {arrow}
     </div>
