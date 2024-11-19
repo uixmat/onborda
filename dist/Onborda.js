@@ -1,6 +1,6 @@
 "use client";
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOnborda } from "./OnbordaContext";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { getCardStyle, getArrowStyle } from "./OnbordaStyles";
  * @constructor
  */
 const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardTransition = { ease: "anticipate", duration: 0.6 }, cardComponent: CardComponent, tourComponent: TourComponent, debug = false, observerTimeout = 5000, }) => {
-    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps } = useOnborda();
+    const { currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps, tours, closeOnborda } = useOnborda();
     const [elementToScroll, setElementToScroll] = useState(null);
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
@@ -23,6 +23,10 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
     const getStepSelectorElement = (step) => {
         return step?.selector ? document.querySelector(step.selector) : step?.customQuerySelector ? step.customQuerySelector() : null;
     };
+    // Get the current tour object
+    const currentTourObject = useMemo(() => {
+        return tours.find((tour) => tour.tour === currentTour);
+    }, [currentTour, isOnbordaVisible]);
     // - -
     // Route Changes
     const router = useRouter();
@@ -53,6 +57,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                         // Function to mark the step as completed if the conditions are met
                         const handleInteraction = () => {
                             const isComplete = step?.isCompleteConditions?.(element) ?? true;
+                            debug && console.log("Onborda: Step Interaction", step, isComplete);
                             // Check if the step is complete based on the conditions, and not already marked as completed
                             if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
                                 debug && console.log("Onborda: Step Completed", step);
@@ -111,6 +116,28 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                         setPointerPosition(getElementPosition(element));
                                         setElementToScroll(element);
                                         currentElementRef.current = element;
+                                        const handleInteraction = () => {
+                                            const isComplete = step?.isCompleteConditions?.(element) ?? true;
+                                            debug && console.log("Onborda: Step Interaction", step, isComplete);
+                                            // Check if the step is complete based on the conditions, and not already marked as completed
+                                            if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                                debug && console.log("Onborda: Step Completed", step);
+                                                setCompletedSteps((prev) => {
+                                                    return prev.add(step?.id ?? currentStep);
+                                                });
+                                                // If callback is provided, call it
+                                                step?.onComplete && step.onComplete();
+                                            } // Check if the step is incomplete based on the conditions, and already marked as completed
+                                            else if (!isComplete && Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                                debug && console.log("Onborda: Step Incomplete", step);
+                                                setCompletedSteps((prev) => {
+                                                    prev.delete(step?.id ?? currentStep);
+                                                    return prev;
+                                                });
+                                            }
+                                        };
+                                        // Initial check
+                                        handleInteraction();
                                         // Enable pointer events on the element
                                         if (step.interactable) {
                                             const htmlElement = element;
@@ -318,6 +345,6 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                     width: pointerPosition.width + pointerPadding,
                                     height: pointerPosition.height + pointerPadding,
                                 }
-                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), completedSteps: Array.from(completedSteps) }) }) }) }), TourComponent && currentTourSteps && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { steps: currentTourSteps, currentTour: currentTour, currentStep: currentStep, setStep: setStep, completedSteps: Array.from(completedSteps) }) }) }))] }))] }));
+                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), completedSteps: Array.from(completedSteps) }) }) }) }), TourComponent && currentTourObject !== undefined && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { tour: currentTourObject, currentTour: currentTour, currentStep: currentStep, setStep: setStep, completedSteps: Array.from(completedSteps), closeOnborda: closeOnborda }) }) }))] }))] }));
 };
 export default Onborda;

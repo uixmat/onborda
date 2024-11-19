@@ -8,6 +8,8 @@ export interface OnbordaProviderProps {
     activeTour?: string;
 }
 export interface OnbordaContextType {
+    /** array of tours */
+    tours: Tour[];
     /** current step index */
     currentStep: number;
     /** current tour name */
@@ -64,14 +66,24 @@ export interface Step {
     prevRoute?: string;
     /** Callback function to be called when the step is completed */
     onComplete?: () => Promise<void>;
+    /** Any additional data for custom use */
+    [key: string]: any;
 }
 export interface Tour {
-    /** The name of the tour */
+    /** The tour ID */
     tour: string;
+    /** Tour Title */
+    title?: string;
+    /** Tour Description */
+    description?: string;
     /** An array of steps in the tour */
     steps: Step[];
     /** Complete Callback */
     onComplete?: () => void;
+    /** Tour can be dismissed. */
+    dismissible?: boolean;
+    /** Any additional data for custom use */
+    [key: string]: any;
 }
 export interface OnbordaProps {
     /** The children elements to be rendered inside the Onborda component */
@@ -119,10 +131,12 @@ export interface TourComponentProps {
     currentTour: string | null;
     /** The index of the current step */
     currentStep: number;
-    /** An array of steps in the current tour */
-    steps: Step[];
+    /** The current Tour object containing details of the tour */
+    tour: Tour;
     /** Function to set the current step by step index or step.id */
     setStep: (step: number | string) => void;
     /** Array of completed steps */
     completedSteps: (string | number)[];
+    /** Function to close the Onborda */
+    closeOnborda: () => void;
 }

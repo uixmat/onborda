@@ -1,5 +1,5 @@
 "use client";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useOnborda} from "./OnbordaContext";
 import {motion} from "framer-motion";
 import {usePathname, useRouter} from "next/navigation";
@@ -24,7 +24,7 @@ const Onborda: React.FC<OnbordaProps> = ({
     debug = false,
     observerTimeout = 5000,
 }: OnbordaProps) => {
-    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps} = useOnborda();
+    const {currentTour, currentStep, setCurrentStep, isOnbordaVisible, currentTourSteps, completedSteps, setCompletedSteps, tours, closeOnborda} = useOnborda();
 
     const [elementToScroll, setElementToScroll] = useState<Element | null>(null);
     const [pointerPosition, setPointerPosition] = useState<{
@@ -42,6 +42,11 @@ const Onborda: React.FC<OnbordaProps> = ({
     const getStepSelectorElement = (step: Step): Element | null => {
         return step?.selector ? document.querySelector(step.selector) : step?.customQuerySelector ? step.customQuerySelector() : null;
     }
+
+   // Get the current tour object
+    const currentTourObject = useMemo(() => {
+        return tours.find((tour) => tour.tour === currentTour);
+    }, [currentTour, isOnbordaVisible]);
 
     // - -
     // Route Changes
@@ -76,6 +81,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                         // Function to mark the step as completed if the conditions are met
                         const handleInteraction = () => {
                             const isComplete = step?.isCompleteConditions?.(element) ?? true;
+
+                            debug && console.log("Onborda: Step Interaction", step, isComplete);
 
                             // Check if the step is complete based on the conditions, and not already marked as completed
                             if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
@@ -142,6 +149,33 @@ const Onborda: React.FC<OnbordaProps> = ({
                                         setPointerPosition(getElementPosition(element));
                                         setElementToScroll(element);
                                         currentElementRef.current = element;
+
+                                        const handleInteraction = () => {
+                                            const isComplete = step?.isCompleteConditions?.(element) ?? true;
+
+                                            debug && console.log("Onborda: Step Interaction", step, isComplete);
+
+                                            // Check if the step is complete based on the conditions, and not already marked as completed
+                                            if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                                debug && console.log("Onborda: Step Completed", step);
+                                                setCompletedSteps((prev) => {
+                                                    return prev.add(step?.id ?? currentStep);
+                                                });
+                                                // If callback is provided, call it
+                                                step?.onComplete && step.onComplete();
+
+                                            } // Check if the step is incomplete based on the conditions, and already marked as completed
+                                            else if (!isComplete && Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                                debug && console.log("Onborda: Step Incomplete", step);
+                                                setCompletedSteps((prev) => {
+                                                    prev.delete(step?.id ?? currentStep);
+                                                    return prev;
+                                                });
+                                            }
+                                        }
+
+                                        // Initial check
+                                        handleInteraction();
 
 
                                         // Enable pointer events on the element
@@ -434,7 +468,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                         </div>
                     </motion.div>
                 </motion.div>
-                {TourComponent && currentTourSteps && (
+                {TourComponent && currentTourObject !== undefined && (
                     <motion.div
                         data-name={'onborda-tour-wrapper'}
                         className={'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none'}
@@ -444,11 +478,12 @@ const Onborda: React.FC<OnbordaProps> = ({
                             className={'pointer-events-auto'}
                         >
                             <TourComponent
-                                steps={currentTourSteps}
+                                tour={currentTourObject}
                                 currentTour={currentTour}
                                 currentStep={currentStep}
                                 setStep={setStep}
                                 completedSteps={Array.from(completedSteps)}
+                                closeOnborda={closeOnborda}
                             />
                         </motion.div>
                     </motion.div>
