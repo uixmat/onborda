@@ -137,15 +137,16 @@ export const CustomTourComponent = ({
 ```
 
 ### Tour object
-| Prop             | Type     | Description                                                                                                                        |
-|------------------|----------|------------------------------------------------------------------------------------------------------------------------------------|
-| `tour`           | `string` | The name of the tour.                                                                                                              |
-| `steps`          | `Step[]` | An array of `Step` objects defining each step of the tour.                                                                         |
-| `title`          | `string` | Optional. The title of the tour.                                                                                                   |
-| `description`    | `string` | Optional. The description of the tour.                                                                                             |
-| `dissmissable`   | `boolean`| Optional. Determines whether the user can dismiss the tour.                                                                        |
-| `onComplete`     | `() => void` | Optional. A function that is called when the tour is completed.                                                              |
-| `[key: string]`  | `any`   | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the TourCard component. |
+| Prop                         | Type     | Description                                                                                                                                                              |
+|------------------------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `tour`                       | `string` | The name of the tour.                                                                                                                                                    |
+| `steps`                      | `Step[]` | An array of `Step` objects defining each step of the tour.                                                                                                               |
+| `title`                      | `string` | Optional. The title of the tour.                                                                                                                                         |
+| `description`                | `string` | Optional. The description of the tour.                                                                                                                                   |
+| `dissmissable`               | `boolean`| Optional. Determines whether the user can dismiss the tour.                                                                                                              |
+| `onComplete`                 | `() => void` | Optional. A function that is called when the tour is completed.                                                                                                          |
+| `initialCompletedStepsState` | `() => Promise<boolean[]>` | Optional. A client or server function that returns a promise that resolves to an array of booleans for each step. If true, the step is marked as completed on tour init. |
+| `[key: string]`              | `any`   | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the TourCard component.                                       |
 
 
 ```tsx
@@ -175,7 +176,6 @@ export const CustomTourComponent = ({
 | <del>`prevRoute`</del> | <del>`string`</del>                      | **Deprecated**.  <del>Optional. The route to navigate to using `next/navigation` when moving to the previous step.</del>                                                                    |
 | `route`                | `string`                                 | Optional. The route to navigate to using `next/navigation` when this step is set.                                                                                                           |
 | `interactable`         | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                 |
-| `initialCompletedState`| `() => Promise<boolean>`                 | Optional. A client function that returns a promise that resolves to a boolean. If true, the step is marked as completed. Called via a `Promise.all()` on each step of a tour when started.  |
 | `isCompleteConditions` | `(element: Element) => boolean`          | Optional. A client function that returns a boolean. If true, the step is marked as completed. Called when the user interacts with the target element.                                       |
 | `onComplete`           | `() => void`                             | Optional. A client function that is called when the step is marked as completed. Called if `isCompleteConditions` returns true.                                                             |
 | `[key: string]`        | `any`                                    | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the Card component.                                                              |
@@ -199,6 +199,7 @@ export const CustomTourComponent = ({
 ### Example `tours` array
 
 ```tsx
+import { FirstTourInitialState } from "@app/lib/initialTourStates"; // Optional initial stare from server action
 [
     {
         tour: "firsttour",
@@ -206,6 +207,7 @@ export const CustomTourComponent = ({
         description: "This is the first tour",
         dissmissable: false,
         customProperty: "This is a custom property passed to the Tour card",
+        initialCompletedStepsState: FirstTourInitialState, //Optional server action called on tour init to get completed steps boolean array
         steps: [
             {
                 icon: <>👋</>,
@@ -225,7 +227,6 @@ export const CustomTourComponent = ({
                 content: <>First tour, second step. To proceed please provide a value</>,
                 selector: "#tour1-step2-input", // target the input
                 isCompleteConditions: (element) => ((element as HTMLInputElement)?.value?.trim() !== ''), // check if the step is completed when element is interacted with
-                initialCompletedState: async () => { await getDatabaseValue('some-required-value') === ''}, // check if the step is already completed when the tour starts
                 interactable: true, // allow user to interact with the input
                 side: "right",
                 showControls: true,
@@ -265,6 +266,18 @@ export const CustomTourComponent = ({
         ]
     }
 ]
+```
+```tsx
+'use server'
+import API from "@app/lib/api";
+export async function FirstTourInitialState() {
+    return Promise.all([
+        (await API.get("/api/first-tour-step-1")).value === 'true',
+        (await API.get("/api/first-tour-step-2")).value === 'true',
+        (await API.get("/api/first-tour-step-3")).value === 'true',
+    ])
+    // return [true, false, false] // Example of an initial state
+}
 ```
 ### OnbordaProvider Props
 | Property           | Type                 | Description                                                                         |

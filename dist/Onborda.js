@@ -59,18 +59,18 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                             const isComplete = step?.isCompleteConditions?.(element) ?? true;
                             debug && console.log("Onborda: Step Interaction", step, isComplete);
                             // Check if the step is complete based on the conditions, and not already marked as completed
-                            if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                            if (isComplete && !Array.from(completedSteps).includes(currentStep)) {
                                 debug && console.log("Onborda: Step Completed", step);
                                 setCompletedSteps((prev) => {
-                                    return prev.add(step?.id ?? currentStep);
+                                    return prev.add(currentStep);
                                 });
                                 // If callback is provided, call it
                                 step?.onComplete && step.onComplete();
                             } // Check if the step is incomplete based on the conditions, and already marked as completed
-                            else if (!isComplete && Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                            else if (!isComplete && Array.from(completedSteps).includes(currentStep)) {
                                 debug && console.log("Onborda: Step Incomplete", step);
                                 setCompletedSteps((prev) => {
-                                    prev.delete(step?.id ?? currentStep);
+                                    prev.delete(currentStep);
                                     return prev;
                                 });
                             }
@@ -120,18 +120,18 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                             const isComplete = step?.isCompleteConditions?.(element) ?? true;
                                             debug && console.log("Onborda: Step Interaction", step, isComplete);
                                             // Check if the step is complete based on the conditions, and not already marked as completed
-                                            if (isComplete && !Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                            if (isComplete && !Array.from(completedSteps).includes(currentStep)) {
                                                 debug && console.log("Onborda: Step Completed", step);
                                                 setCompletedSteps((prev) => {
-                                                    return prev.add(step?.id ?? currentStep);
+                                                    return prev.add(currentStep);
                                                 });
                                                 // If callback is provided, call it
                                                 step?.onComplete && step.onComplete();
                                             } // Check if the step is incomplete based on the conditions, and already marked as completed
-                                            else if (!isComplete && Array.from(completedSteps).includes(step?.id ?? currentStep)) {
+                                            else if (!isComplete && Array.from(completedSteps).includes(currentStep)) {
                                                 debug && console.log("Onborda: Step Incomplete", step);
                                                 setCompletedSteps((prev) => {
-                                                    prev.delete(step?.id ?? currentStep);
+                                                    prev.delete(currentStep);
                                                     return prev;
                                                 });
                                             }
@@ -189,7 +189,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                             // Mark the step as completed
                             step?.onComplete && step.onComplete();
                             setCompletedSteps((prev) => {
-                                return prev.add(step?.id ?? currentStep);
+                                return prev.add(currentStep);
                             });
                         }
                     }
@@ -197,7 +197,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                         // Mark the step as completed
                         step?.onComplete && step.onComplete();
                         setCompletedSteps((prev) => {
-                            return prev.add(step?.id ?? currentStep);
+                            return prev.add(currentStep);
                         });
                     }
                 }

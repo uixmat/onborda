@@ -25,9 +25,9 @@ export interface OnbordaContextType {
     /** flag to check if Onborda is visible */
     isOnbordaVisible: boolean;
     /** default completed steps */
-    completedSteps: Set<number | string>;
+    completedSteps: Set<number>;
     /** setstate function to set the completed steps */
-    setCompletedSteps: React.Dispatch<React.SetStateAction<Set<number | string>>>;
+    setCompletedSteps: React.Dispatch<React.SetStateAction<Set<number>>>;
 }
 export interface Step {
     /** The unique identifier for the step */
@@ -54,8 +54,6 @@ export interface Step {
     interactable?: boolean;
     /** Conditions to be met before the next step can be triggered. Function is bound to event listeners on the target element on 'input', 'change' and 'click' events. */
     isCompleteConditions?: (element: Element | null) => boolean;
-    /** Initial completed state of the step. an async function called on tour started.*/
-    initialCompletedState?: () => Promise<boolean>;
     /** The route for this step */
     route?: string;
     /** The route to navigate to for the next step */
@@ -84,6 +82,8 @@ export interface Tour {
     dismissible?: boolean;
     /** Any additional data for custom use */
     [key: string]: any;
+    /** Initial completed steps state of the tour. an async function called on tour started. Can be a Server Action e.g. Promise.all([]) on API calls. */
+    initialCompletedStepsState?: () => Promise<boolean[]>;
 }
 export interface OnbordaProps {
     /** The children elements to be rendered inside the Onborda component */
