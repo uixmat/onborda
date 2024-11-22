@@ -8,11 +8,11 @@ Onborda is a lightweight onboarding flow that utilises [framer-motion](https://w
 ## Getting started
 ```bash
 # npm
-npm i Libresoft-UK/onborda
+npm i onborda
 # pnpm
-pnpm add Libresoft-UK/onborda
+pnpm add onborda
 # yarn
-yarn add Libresoft-UK/onborda
+yarn add onborda
 ```
 
 ### Global `layout.tsx`
