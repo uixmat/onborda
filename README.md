@@ -118,7 +118,7 @@ export const CustomTourComponent = ({
   closeOnborda
 }: TourComponentProps) => {
   return (
-    <div>
+    <div className={'absolute bottom-3 left-3 w-60 p-0'}> {/* Tailwind CSS classes to position TourCard in bottom left of screen */}
       <h1>{currentTour}</h1>
       <h2>{currentStep} of {tour.steps.length}</h2>
       <h2>{completedSteps.length} of {tour.steps.length} completed</h2>
