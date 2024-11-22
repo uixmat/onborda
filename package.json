@@ -25,17 +25,19 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "start": "npm run build && node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "dev": "nodemon --watch \"src/**/*\" --ext \"ts,tsx,js,json\" --exec \"npm run build\""
   },
   "peerDependencies": {
+    "@radix-ui/react-portal": ">=1.1.1",
     "framer-motion": ">=11",
     "next": ">=13",
     "react": ">=18",
-    "react-dom": ">=18",
-    "@radix-ui/react-portal": ">=1.1.1"
+    "react-dom": ">=18"
   },
   "devDependencies": {
     "@types/react": "^18.2.63",
+    "nodemon": "^3.1.7",
     "typescript": "^5.3.3"
   }
 }
