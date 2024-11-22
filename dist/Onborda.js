@@ -17,6 +17,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
     const [pointerPosition, setPointerPosition] = useState(null);
     const currentElementRef = useRef(null);
     const [currentRoute, setCurrentRoute] = useState(null);
+    const [pendingRouteChange, setPendingRouteChange] = useState(false);
     const hasSelector = (step) => {
         return !!step?.selector || !!step?.customQuerySelector;
     };
@@ -162,6 +163,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                 childList: true,
                                 subtree: true,
                             });
+                            setPendingRouteChange(true);
                             // Set a timeout to disconnect the observer if the element is not found within a certain period
                             const timeoutId = setTimeout(() => {
                                 observer.disconnect();
@@ -170,6 +172,7 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                             // Clear the timeout if the observer disconnects successfully
                             const originalDisconnect = observer.disconnect.bind(observer);
                             observer.disconnect = () => {
+                                setPendingRouteChange(false);
                                 clearTimeout(timeoutId);
                                 originalDisconnect();
                             };
@@ -345,6 +348,6 @@ const Onborda = ({ children, shadowRgb = "0, 0, 0", shadowOpacity = "0.2", cardT
                                     width: pointerPosition.width + pointerPadding,
                                     height: pointerPosition.height + pointerPadding,
                                 }
-                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), completedSteps: Array.from(completedSteps) }) }) }) }), TourComponent && currentTourObject !== undefined && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { tour: currentTourObject, currentTour: currentTour, currentStep: currentStep, setStep: setStep, completedSteps: Array.from(completedSteps), closeOnborda: closeOnborda }) }) }))] }))] }));
+                                : {}, transition: cardTransition, children: _jsx("div", { className: "absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]", "data-name": "onborda-card", style: getCardStyle(currentTourSteps?.[currentStep]?.side), children: _jsx(CardComponent, { step: currentTourSteps?.[currentStep], currentStep: currentStep, totalSteps: currentTourSteps?.length ?? 0, nextStep: nextStep, prevStep: prevStep, setStep: setStep, closeOnborda: closeOnborda, arrow: _jsx(CardArrow, { isVisible: currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false }), completedSteps: Array.from(completedSteps), pendingRouteChange: pendingRouteChange }) }) }) }), TourComponent && currentTourObject !== undefined && (_jsx(motion.div, { "data-name": 'onborda-tour-wrapper', className: 'fixed top-0 left-0 z-[998] w-screen h-screen pointer-events-none', children: _jsx(motion.div, { "data-name": 'onborda-tour', className: 'pointer-events-auto', children: _jsx(TourComponent, { tour: currentTourObject, currentTour: currentTour, currentStep: currentStep, setStep: setStep, completedSteps: Array.from(completedSteps), closeOnborda: closeOnborda }) }) }))] }))] }));
 };
 export default Onborda;

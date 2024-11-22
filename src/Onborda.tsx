@@ -35,6 +35,7 @@ const Onborda: React.FC<OnbordaProps> = ({
     } | null>(null);
     const currentElementRef = useRef<Element | null>(null);
     const [currentRoute, setCurrentRoute] = useState<string | null>(null);
+    const [pendingRouteChange, setPendingRouteChange] = useState(false);
 
     const hasSelector = (step: Step): boolean => {
         return !!step?.selector || !!step?.customQuerySelector;
@@ -203,6 +204,8 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 subtree: true,
                             });
 
+                            setPendingRouteChange(true);
+
                             // Set a timeout to disconnect the observer if the element is not found within a certain period
                             const timeoutId = setTimeout(() => {
                                 observer.disconnect();
@@ -212,6 +215,7 @@ const Onborda: React.FC<OnbordaProps> = ({
                             // Clear the timeout if the observer disconnects successfully
                             const originalDisconnect = observer.disconnect.bind(observer);
                             observer.disconnect = () => {
+                                setPendingRouteChange(false);
                                 clearTimeout(timeoutId);
                                 originalDisconnect();
                             };
@@ -462,8 +466,10 @@ const Onborda: React.FC<OnbordaProps> = ({
                                 nextStep={nextStep}
                                 prevStep={prevStep}
                                 setStep={setStep}
+                                closeOnborda={closeOnborda}
                                 arrow={<CardArrow isVisible={currentTourSteps?.[currentStep] ? hasSelector(currentTourSteps?.[currentStep]) : false}/>}
                                 completedSteps={Array.from(completedSteps)}
+                                pendingRouteChange={pendingRouteChange}
                             />
                         </div>
                     </motion.div>

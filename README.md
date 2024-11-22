@@ -46,16 +46,18 @@ const config: Config = {
 ### Card Component
 If you require greater control over the card design or simply wish to create a totally custom component then you can do so easily. The following props can be used to customise your card component.
 
-| Prop          | Type                                 | Description                                                                     |
-|---------------|--------------------------------------|---------------------------------------------------------------------------------|
-| `step`         | `Object`                             | The current `Step` object from your steps array, including content, title, etc. |
-| `currentStep`   | `number`                             | The index of the current step in the steps array.                               |
-| `totalSteps`    | `number`                             | The total number of steps in the onboarding process.                            |
-| `setStep`       | `(step: number \| string) => void;`  | A function to set the current step in the onboarding process.                   |
-| `nextStep`      | `() => void`                         | A function to advance to the next step in the onboarding process.               |
-| `prevStep`      | `() => void`                         | A function to go back to the previous step in the onboarding process.           |
-| `arrow`         | `JSX.Element`                         | An SVG object, the orientation is controlled by the steps side prop             |
-| `completedSteps`| `number[]`                           | An array of completed step indexes/ids.                                         |
+| Prop                 | Type                                | Description                                                                                   |
+|----------------------|-------------------------------------|-----------------------------------------------------------------------------------------------|
+| `step`               | `Object`                            | The current `Step` object from your steps array, including content, title, etc.               |
+| `currentStep`        | `number`                            | The index of the current step in the steps array.                                             |
+| `totalSteps`         | `number`                            | The total number of steps in the onboarding process.                                          |
+| `setStep`            | `(step: number \| string) => void;` | A function to set the current step in the onboarding process.                                 |
+| `nextStep`           | `() => void`                        | A function to advance to the next step in the onboarding process.                             |
+| `prevStep`           | `() => void`                        | A function to go back to the previous step in the onboarding process.                         |
+| `closeOnborda`       | `() => void`                        | A function to close the onboarding process.                                                   |
+| `arrow`              | `JSX.Element`                       | An SVG object, the orientation is controlled by the steps side prop                           |
+| `completedSteps`     | `number[]`                          | An array of completed step indexes/ids.                                                       |
+| `pendingRouteChange` | `boolean`                           | A boolean to determine if a route change is pending. Only set if the step has a selector set. |
 
 
 ```tsx
@@ -69,16 +71,21 @@ export const CustomCardComponent = ({
   setStep,
   nextStep,
   prevStep,
+  closeOnborda,
   arrow,
-  completedSteps
+  completedSteps,
+  pendingRouteChange
 }: CardComponentProps) => {
   return (
     <div>
       <h1>{step.icon} {step.title} {completedSteps.contains(currentStep) ? <>✅</> : <></>}</h1>
       <h2>{currentStep} of {totalSteps}</h2>
-      <p>{step.content}</p>
-      <button onClick={prevStep}>Previous</button>
-      <button onClick={nextStep}>Next</button>
+      <div>
+        {step.content}
+      </div>
+      <button onClick={prevStep} disabled={pendingRouteChange || currentStep == 0}>Previous</button>
+      <button onClick={nextStep} disabled={pendingRouteChange || currentStep === (totalSteps-1)}>Next</button>
+      <button onClick={closeOnborda} disabled={pendingRouteChange}>Finish</button>
       <button onClick={() => setStep(0)}>Restart</button>
       {arrow}
     </div>
@@ -89,14 +96,14 @@ export const CustomCardComponent = ({
 ### Tour Component
 If you require greater control over the tour design or simply wish to create a totally custom component then you can do so easily.
 
-| Prop          | Type     | Description                                                   |
-|---------------|----------|---------------------------------------------------------------|
-| `tour`         | `Tour`   | The current `Tour` object from your tours array.              |
-| `currentTour`  | `string` | The current tour name.                                        |
-| `currentStep`  | `number` | The index of the current step in the steps array.             |
-| `completedSteps`| `number[]`| An array of completed step indexes/ids.                       |
-| `setStep`      | `(step: number \| string) => void;` | A function to set the current step in the onboarding process. |
-| `closeOnborda` | `() => void` | A function to close the onboarding process.                   |
+| Prop             | Type                                | Description                                                   |
+|------------------|-------------------------------------|---------------------------------------------------------------|
+| `tour`           | `Tour`                              | The current `Tour` object from your tours array.              |
+| `currentTour`    | `string`                            | The current tour name.                                        |
+| `currentStep`    | `number`                            | The index of the current step in the steps array.             |
+| `completedSteps` | `number[]`                          | An array of completed step indexes/ids.                       |
+| `setStep`        | `(step: number \| string) => void;` | A function to set the current step in the onboarding process. |
+| `closeOnborda`   | `() => void`                        | A function to close the onboarding process.                   |
 
 ```tsx
 "use client"
@@ -137,20 +144,20 @@ export const CustomTourComponent = ({
 ```
 
 ### Tour object
-| Prop                         | Type     | Description                                                                                                                                                              |
-|------------------------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `tour`                       | `string` | The name of the tour.                                                                                                                                                    |
-| `steps`                      | `Step[]` | An array of `Step` objects defining each step of the tour.                                                                                                               |
-| `title`                      | `string` | Optional. The title of the tour.                                                                                                                                         |
-| `description`                | `string` | Optional. The description of the tour.                                                                                                                                   |
-| `dissmissable`               | `boolean`| Optional. Determines whether the user can dismiss the tour.                                                                                                              |
-| `onComplete`                 | `() => void` | Optional. A function that is called when the tour is completed.                                                                                                          |
+| Prop                         | Type                       | Description                                                                                                                                                              |
+|------------------------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `tour`                       | `string`                   | The name of the tour.                                                                                                                                                    |
+| `steps`                      | `Step[]`                   | An array of `Step` objects defining each step of the tour.                                                                                                               |
+| `title`                      | `string`                   | Optional. The title of the tour.                                                                                                                                         |
+| `description`                | `string`                   | Optional. The description of the tour.                                                                                                                                   |
+| `dissmissable`               | `boolean`                  | Optional. Determines whether the user can dismiss the tour.                                                                                                              |
+| `onComplete`                 | `() => void`               | Optional. A function that is called when the tour is completed.                                                                                                          |
 | `initialCompletedStepsState` | `() => Promise<boolean[]>` | Optional. A client or server function that returns a promise that resolves to an array of booleans for each step. If true, the step is marked as completed on tour init. |
-| `[key: string]`              | `any`   | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the TourCard component.                                       |
+| `[key: string]`              | `any`                      | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the TourCard component.                                       |
 
 
 ```tsx
-{
+const tour : Tour = {
     tour: "firstyour",
     steps: [
         Step
@@ -162,28 +169,28 @@ export const CustomTourComponent = ({
 
 | Prop                   | Type                                     | Description                                                                                                                                                                                 |
 |------------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`                   | `string`                                 | Optional. A unique identifier for the step. If set, step can be acitavted using `setStep(step.id)`. Otherwise steps[] index is used.                                                        |
-| `icon`                 | `React.ReactNode`, `string`, `null`      | An icon or element to display alongside the step title.                                                                                                                                     |
-| `title`                | `string`                                 | The title of your step                                                                                                                                                                      |
 | `content`              | `React.ReactNode`                        | The main content or body of the step.                                                                                                                                                       |
+| `id`                   | `string`                                 | Optional. A unique identifier for the step. If set, step can be acitavted using `setStep(step.id)`. Otherwise steps[] index is used.                                                        |
+| `title`                | `string`                                 | Optional. The title of your step                                                                                                                                                            |
+| `icon`                 | `React.ReactNode`, `string`, `null`      | Optional. An icon or element to display alongside the step title.                                                                                                                           |
 | `selector`             | `string`                                 | Optional. A string used to target an Element by `id` that this step refers to. Takes precedence over `customQuerySelector`.                                                                 |
 | `customQuerySelector`  | `()=>Element \| null`                    | Optional. A client function that returns the element to target that this step refers to. Proceeded by `selector`. <br> Useful for targeting complex elements, like those from UI libraries. |
 | `side`                 | `"top"`, `"bottom"`, `"left"`, `"right"` | Optional. Determines where the tooltip should appear relative to the selector.                                                                                                              |
 | `showControls`         | `boolean`                                | Optional. Determines whether control buttons (next, prev) should be shown if using the default card.                                                                                        |
 | `pointerPadding`       | `number`                                 | Optional. The padding around the pointer (keyhole) highlighting the target element.                                                                                                         |
 | `pointerRadius`        | `number`                                 | Optional. The border-radius of the pointer (keyhole) highlighting the target element.                                                                                                       |
-| <del>`nextRoute`</del> | <del>`string`</del>                      | **Deprecated**.  <del>Optional. The route to navigate to using `next/navigation` when moving to the next step.</del>                                                                        |
-| <del>`prevRoute`</del> | <del>`string`</del>                      | **Deprecated**.  <del>Optional. The route to navigate to using `next/navigation` when moving to the previous step.</del>                                                                    |
 | `route`                | `string`                                 | Optional. The route to navigate to using `next/navigation` when this step is set.                                                                                                           |
 | `interactable`         | `boolean`                                | Optional. Determines whether the user can interact with the target element.                                                                                                                 |
 | `isCompleteConditions` | `(element: Element) => boolean`          | Optional. A client function that returns a boolean. If true, the step is marked as completed. Called when the user interacts with the target element.                                       |
 | `onComplete`           | `() => void`                             | Optional. A client function that is called when the step is marked as completed. Called if `isCompleteConditions` returns true.                                                             |
 | `[key: string]`        | `any`                                    | Optional. Any additional properties you wish to add. Will be available in the `useOnborda` hook as well as the Card component.                                                              |
+| <del>`nextRoute`</del> | <del>`string`</del>                      | **Deprecated**.  <del>Optional. The route to navigate to using `next/navigation` when moving to the next step.</del>                                                                        |
+| <del>`prevRoute`</del> | <del>`string`</del>                      | **Deprecated**.  <del>Optional. The route to navigate to using `next/navigation` when moving to the previous step.</del>                                                                    |
 
 > [!IMPORTANT]
 > The `nextRoute` and `prevRoute` properties have been deprecated. Please use the `route` property instead.
 ```tsx
-{
+const step: Step = {
     icon: <>👋</>,
     title: "Tour 1, Step 1",
     content: <>First tour, first step</>,
@@ -200,7 +207,7 @@ export const CustomTourComponent = ({
 
 ```tsx
 import { FirstTourInitialState } from "@app/lib/initialTourStates"; // Optional initial stare from server action
-[
+const tours : Tour[] = [
     {
         tour: "firsttour",
         title: "First Tour",
@@ -297,7 +304,6 @@ export async function FirstTourInitialState() {
 | Property           | Type                 | Description                                                                                                                                                                                                                                                                         |
 |--------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `children`         | `React.ReactNode`    | Your website or application content.                                                                                                                                                                                                                                                |
-| <del>`steps`</del> | <del>`Array[]`</del> | **Deprecated** <del>An array of `Step` objects defining each step of the onboarding process.</del>                                                                                                                                                                                  |
 | `showOnborda`      | `boolean`            | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                                                                                                                                                          |
 | `shadowRgb`        | `string`             | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.                                                                                                                                                                             |
 | `shadowOpacity`    | `string`             | Optional. The opacity value for the shadow surrounding the target area. Defaults to `"0.2"`                                                                                                                                                                                         |
@@ -306,6 +312,7 @@ export async function FirstTourInitialState() {
 | `tourComponent`    | `React.ReactNode`    | The React component to use as a list of steps for the current tour.                                                                                                                                                                                                                 |
 | `debug`            | `boolean`            | Optional. Console logs the current step and the target element. Defaults to `false`.                                                                                                                                                                                                |
 | `observerTimeout`  | `number`             | Optional. The timeout in milliseconds for the observer to wait for the target element to be available. Defaults to `5000`. Observer is used to wait for the target element to be available before proceeding to the next step e.g. when the target element is on a different route. |
+| <del>`steps`</del> | <del>`Array[]`</del> | **Deprecated** <del>An array of `Step` objects defining each step of the onboarding process.</del>                                                                                                                                                                                  |
 
 > [!IMPORTANT]
 > The `steps` property has been deprecated. Please use the `OnbordaProvider.tours` property instead.
@@ -327,18 +334,18 @@ export async function FirstTourInitialState() {
 ### UseOnborda Context
 The `useOnborda` hook provides a set of functions to control the onboarding process from any child within the `OnboardaProvider`. The hook returns an object with the following properties:
 
-| Property           | Type                                                          | Description                                                              |
-|--------------------|---------------------------------------------------------------|--------------------------------------------------------------------------|
-| `tours`            | `Tour[]`                                                      | An array of `Tour` objects defining each tour of the onboarding process. |
-| `startOnborda`     | `() => void`                                                  | A function to start the onboarding process.                              |
-| `closeOnborda`     | `() => void`                                                  | A function to close the onboarding process.                              |
-| `curreentTour`     | `string`                                                      | The name of the current tour.                                            |
-| `currentStep`      | `number`                                                      | The index of the current step in the steps array.                        |
-| `currentTourSteps` | `Step[]`                                                      | The steps array for the current tour.                                    |
-| `setCurrentStep`   | `(step: number \| string) => void;`                           | A function to set the current step in the onboarding process.            |
-| `completedSteps`   | `Set<number \| string>`                                       | An array of completed step indexes/ids.                                  |
-| `setCompletedSteps`| `React.Dispatch<React.SetStateAction<Set<number \| string>>>` | A function to set the completed steps array.                             |
-| `isOnbordaVisible` | `boolean`                                                     | A boolean to determine if the onboarding overlay is visible.             |
+| Property           | Type                                                  | Description                                                              |
+|--------------------|-------------------------------------------------------|--------------------------------------------------------------------------|
+| `tours`            | `Tour[]`                                              | An array of `Tour` objects defining each tour of the onboarding process. |
+| `startOnborda`     | `() => void`                                          | A function to start the onboarding process.                              |
+| `closeOnborda`     | `() => void`                                          | A function to close the onboarding process.                              |
+| `curreentTour`     | `string`                                              | The name of the current tour.                                            |
+| `currentStep`      | `number`                                              | The index of the current step in the steps array.                        |
+| `currentTourSteps` | `Step[]`                                              | The steps array for the current tour.                                    |
+| `setCurrentStep`   | `(step: number \| string) => void;`                   | A function to set the current step in the onboarding process.            |
+| `completedSteps`   | `Set<number>`                                         | An array of completed step indexes/ids.                                  |
+| `setCompletedSteps`| `React.Dispatch<React.SetStateAction<Set<number>>>`   | A function to set the completed steps array.                             |
+| `isOnbordaVisible` | `boolean`                                             | A boolean to determine if the onboarding overlay is visible.             |
 
 ```tsx
 const { 

@@ -32,12 +32,12 @@ export interface OnbordaContextType {
 export interface Step {
     /** The unique identifier for the step */
     id?: string;
-    /** The icon to be displayed in the step */
-    icon: React.ReactNode | string | null;
     /** The title of the step */
-    title: string;
+    title?: string;
     /** The content to be displayed in the step */
     content: React.ReactNode;
+    /** The icon to be displayed in the step */
+    icon?: React.ReactNode | string | null;
     /** The CSS selector for the element to highlight. Takes precedence over customQuerySelector if both are provided. */
     selector?: string;
     /** A custom function to query the target element. Ignored if selector is provided. */
@@ -121,10 +121,14 @@ export interface CardComponentProps {
     nextStep: () => void;
     /** Function to navigate to the previous step */
     prevStep: () => void;
+    /** Function to close the Onborda */
+    closeOnborda: () => void;
     /** The arrow element to be displayed in the card */
     arrow: JSX.Element;
     /** Array of completed steps */
     completedSteps: (string | number)[];
+    /** Is waiting for Route change */
+    pendingRouteChange: boolean;
 }
 export interface TourComponentProps {
     /** The current tour name */
