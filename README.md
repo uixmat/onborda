@@ -100,7 +100,7 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
 
 | Prop           | Type                          | Description                                                                           |
 |----------------|-------------------------------|---------------------------------------------------------------------------------------|
-| `icon`           | `React.ReactNode`, `string`, `null` | An icon or element to display alongside the step title.                                |
+| `icon`           | `React.ReactNode`, `string`, `null` | Optional. An icon or element to display alongside the step title.                                |
 | `title`          | `string`                        | The title of your step                     |
 | `content`        | `React.ReactNode`               | The main content or body of the step.                                                 |
 | `selector`       | `string`                        | A string used to target an `id` that this step refers to.            |
@@ -154,6 +154,7 @@ Steps have changed since Onborda v1.2.3 and now fully supports multiple "tours" 
 | Property        | Type                  | Description                                                                           |
 |-----------------|-----------------------|---------------------------------------------------------------------------------------|
 | `children`      | `React.ReactNode`     | Your website or application content.                                                  |
+| `interact`      | `boolean`             | Optional. Controls whether the onboarding overlay should be interactive. Defaults to `false`. |
 | `steps`         | `Array[]`             | An array of `Step` objects defining each step of the onboarding process.              |
 | `showOnborda`   | `boolean`             | Optional. Controls the visibility of the onboarding overlay, eg. if the user is a first time visitor. Defaults to `false`.                         |
 | `shadowRgb`     | `string`              | Optional. The RGB values for the shadow color surrounding the target area. Defaults to black `"0,0,0"`.      |

@@ -13,7 +13,7 @@ export interface OnbordaContextType {
 // Step
 export interface Step {
   // Step Content
-  icon: React.ReactNode | string | null;
+  icon?: React.ReactNode | string | null;
   title: string;
   content: React.ReactNode;
   selector: string;
