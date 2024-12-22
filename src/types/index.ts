@@ -37,6 +37,7 @@ export interface Tour {
 // Onborda
 export interface OnbordaProps {
   children: React.ReactNode;
+  interact?: boolean;
   steps: Tour[];
   showOnborda?: boolean;
   shadowRgb?: string;

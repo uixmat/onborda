@@ -10,6 +10,7 @@ import { OnbordaProps } from "./types";
 
 const Onborda: React.FC<OnbordaProps> = ({
   children,
+  interact = false,
   steps,
   shadowRgb = "0, 0, 0",
   shadowOpacity = "0.2",
@@ -40,13 +41,33 @@ const Onborda: React.FC<OnbordaProps> = ({
 
   // - -
   // Initialisze
+  const previousElementRef = useRef<Element | null>(null);
+
   useEffect(() => {
     if (isOnbordaVisible && currentTourSteps) {
-      console.log("Onborda: Current Step Changed");
+      // Clean up all elements that might have our styles
+      currentTourSteps.forEach(tourStep => {
+        const element = document.querySelector(tourStep.selector) as HTMLElement | null;
+        if (element && tourStep !== currentTourSteps[currentStep]) {
+          // Reset styles for non-active elements if interaction is enabled
+          if (interact) {
+            const style = element.style;
+            style.position = '';
+            style.zIndex = '';
+          }
+        }
+      });
+
       const step = currentTourSteps[currentStep];
       if (step) {
         const element = document.querySelector(step.selector) as Element | null;
         if (element) {
+          // Set styles for current element
+          (element as HTMLElement).style.position = 'relative';
+          if (interact) {
+            (element as HTMLElement).style.zIndex = '990';
+          }
+
           setPointerPosition(getElementPosition(element));
           currentElementRef.current = element;
           setElementToScroll(element);
@@ -61,7 +82,20 @@ const Onborda: React.FC<OnbordaProps> = ({
         }
       }
     }
-  }, [currentStep, currentTourSteps, isInView, offset, isOnbordaVisible]);
+
+    // Cleanup function for component unmount
+    return () => {
+      if (currentTourSteps) {
+        currentTourSteps.forEach(step => {
+          const element = document.querySelector(step.selector) as HTMLElement | null;
+          if (element && interact) {
+            element.style.position = '';
+            element.style.zIndex = '';
+          }
+        });
+      }
+    };
+  }, [currentStep, currentTourSteps, isInView, offset, isOnbordaVisible, interact]);
 
   // - -
   // Helper function to get element position
@@ -444,6 +478,9 @@ const Onborda: React.FC<OnbordaProps> = ({
       {/* Onborda Overlay Step Content */}
       {pointerPosition && isOnbordaVisible && CardComponent && (
         <Portal>
+          {!interact && (
+            <div className="fixed inset-0 z-[900]" />
+          )}
           <motion.div
             data-name="onborda-overlay"
             className="absolute inset-0 "
@@ -454,7 +491,7 @@ const Onborda: React.FC<OnbordaProps> = ({
           >
             <motion.div
               data-name="onborda-pointer"
-              className="relative z-[999]"
+              className="relative z-[900]"
               style={{
                 boxShadow: `0 0 200vw 200vh rgba(${shadowRgb}, ${shadowOpacity})`,
                 borderRadius: `${pointerRadius}px ${pointerRadius}px ${pointerRadius}px ${pointerRadius}px`,
@@ -483,7 +520,7 @@ const Onborda: React.FC<OnbordaProps> = ({
             >
               {/* Card */}
               <div
-                className="absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[999]"
+                className="absolute flex flex-col max-w-[100%] transition-all min-w-min pointer-events-auto z-[950]"
                 data-name="onborda-card"
                 style={getCardStyle(
                   currentTourSteps?.[currentStep]?.side as any
