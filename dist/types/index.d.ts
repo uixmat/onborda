@@ -9,7 +9,7 @@ export interface OnbordaContextType {
     isOnbordaVisible: boolean;
 }
 export interface Step {
-    icon: React.ReactNode | string | null;
+    icon?: React.ReactNode | string | null;
     title: string;
     content: React.ReactNode;
     selector: string;
