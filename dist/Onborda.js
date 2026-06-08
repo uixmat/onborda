@@ -50,6 +50,9 @@ const Onborda = ({ children, interact = false, steps, shadowRgb = "0, 0, 0", sha
                     const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
                     if (!isInView || !isInViewportWithOffset) {
                         element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        // Re-measure after smooth scroll settles — getBoundingClientRect()
+                        // returns stale coordinates while the scroll animation is in flight.
+                        setTimeout(() => setPointerPosition(getElementPosition(element)), 500);
                     }
                 }
             }
@@ -96,6 +99,7 @@ const Onborda = ({ children, interact = false, steps, shadowRgb = "0, 0, 0", sha
                     const isInViewportWithOffset = rect.top >= -offset && rect.bottom <= window.innerHeight + offset;
                     if (!isInView || !isInViewportWithOffset) {
                         element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        setTimeout(() => setPointerPosition(getElementPosition(element)), 500);
                     }
                 }
             }
@@ -129,10 +133,34 @@ const Onborda = ({ children, interact = false, steps, shadowRgb = "0, 0, 0", sha
     // - -
     // Update pointer position on window resize
     useEffect(() => {
-        if (isOnbordaVisible) {
-            window.addEventListener("resize", updatePointerPosition);
-            return () => window.removeEventListener("resize", updatePointerPosition);
+        if (!isOnbordaVisible)
+            return;
+        window.addEventListener("resize", updatePointerPosition);
+        // Re-measure after smooth scroll settles so the pointer lands correctly
+        // when the target element was out of the viewport on step entry.
+        let debounceTimer;
+        const handleScrollEnd = () => updatePointerPosition();
+        const handleScroll = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updatePointerPosition, 150);
+        };
+        const supportsScrollEnd = "onscrollend" in window;
+        if (supportsScrollEnd) {
+            window.addEventListener("scrollend", handleScrollEnd);
         }
+        else {
+            window.addEventListener("scroll", handleScroll, { passive: true });
+        }
+        return () => {
+            window.removeEventListener("resize", updatePointerPosition);
+            if (supportsScrollEnd) {
+                window.removeEventListener("scrollend", handleScrollEnd);
+            }
+            else {
+                window.removeEventListener("scroll", handleScroll);
+                clearTimeout(debounceTimer);
+            }
+        };
     }, [currentStep, currentTourSteps, isOnbordaVisible]);
     // - -
     // Step Controls
@@ -216,9 +244,11 @@ const Onborda = ({ children, interact = false, steps, shadowRgb = "0, 0, 0", sha
                 const isInViewport = top >= -offset && top <= window.innerHeight + offset;
                 if (!isInViewport) {
                     element.scrollIntoView({ behavior: "smooth", block: "center" });
+                    setTimeout(() => setPointerPosition(getElementPosition(element)), 500);
                 }
-                // Update pointer position after scrolling
-                setPointerPosition(getElementPosition(element));
+                else {
+                    setPointerPosition(getElementPosition(element));
+                }
             }
         }
     };
